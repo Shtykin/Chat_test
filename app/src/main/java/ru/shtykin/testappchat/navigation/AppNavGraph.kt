@@ -11,6 +11,7 @@ fun AppNavGraph(
     navHostController: NavHostController,
     registrationScreenContent: @Composable () -> Unit,
     loginScreenContent: @Composable () -> Unit,
+    chooseCountryScreenContent: @Composable () -> Unit,
     allChatsScreenContent: @Composable () -> Unit,
     chatScreenContent: @Composable () -> Unit,
     profileScreenContent: @Composable () -> Unit,
@@ -25,6 +26,9 @@ fun AppNavGraph(
         }
         composable(Screen.Login.route) {
             loginScreenContent()
+        }
+        composable(Screen.ChooseCountry.route) {
+            chooseCountryScreenContent()
         }
         composable(Screen.AllChats.route) {
             allChatsScreenContent()

@@ -1,5 +1,6 @@
 package ru.shtykin.testappchat.presentation.state
 
+import ru.shtykin.testappchat.domain.entity.Country
 
 
 sealed class ScreenState {
@@ -9,7 +10,11 @@ sealed class ScreenState {
     ) : ScreenState()
 
     data class LoginScreen(
-        val temp: String
+        val country: Country?
+    ) : ScreenState()
+
+    data class ChooseCountryScreen(
+        val countries: List<Country>
     ) : ScreenState()
 
     data class AllChatsChats(
