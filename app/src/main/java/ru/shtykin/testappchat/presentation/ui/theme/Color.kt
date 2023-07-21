@@ -1,4 +1,4 @@
-package ru.shtykin.testappchat.ui.theme
+package ru.shtykin.testappchat.presentation.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
