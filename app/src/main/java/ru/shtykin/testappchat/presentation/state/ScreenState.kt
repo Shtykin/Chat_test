@@ -10,7 +10,10 @@ sealed class ScreenState {
     ) : ScreenState()
 
     data class LoginScreen(
-        val country: Country?
+        val phone: String? = null,
+        val country: Country? = null,
+        val isVisibleCodeField: Boolean,
+        val error: String?
     ) : ScreenState()
 
     data class ChooseCountryScreen(

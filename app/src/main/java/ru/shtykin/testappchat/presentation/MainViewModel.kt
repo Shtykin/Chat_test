@@ -35,14 +35,47 @@ class MainViewModel @Inject constructor(
     fun loginScreenOpened(country: Country) {
         viewModelScope.launch {
             _uiState.value = ScreenState.LoginScreen(
-                country = country
+                country = country,
+                isVisibleCodeField = false,
+                error = null
+            )
+        }
+    }
+    fun loginScreenOpened(phone: String) {
+        viewModelScope.launch {
+            _uiState.value = ScreenState.LoginScreen(
+                phone = phone,
+                isVisibleCodeField = false,
+                error = null
             )
         }
     }
 
-    fun registrationScreenOpened() {
+    fun tryToLogin(phone: String) {
+        viewModelScope.launch {
+            try {
+                phoneNumberUtil.parse(
+                    phone,
+                    Phonenumber.PhoneNumber.CountryCodeSource.FROM_NUMBER_WITH_PLUS_SIGN.name
+                )
+                _uiState.value = ScreenState.LoginScreen(
+                    phone = phone,
+                    isVisibleCodeField = true,
+                    error = null
+                )
+            } catch (e: Exception) {
+                _uiState.value = ScreenState.LoginScreen(
+                    phone = phone,
+                    isVisibleCodeField = false,
+                    error = e.message
+                )
+            }
+        }
+    }
+
+    fun registrationScreenOpened(phone: String) {
         _uiState.value = ScreenState.RegistrationScreen(
-            temp = ""
+            temp = phone
         )
     }
 

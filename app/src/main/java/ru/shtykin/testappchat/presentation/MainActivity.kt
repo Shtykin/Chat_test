@@ -1,6 +1,7 @@
 package ru.shtykin.testappchat.presentation
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -25,6 +26,7 @@ import ru.shtykin.testappchat.navigation.AppNavGraph
 import ru.shtykin.testappchat.navigation.Screen
 import ru.shtykin.testappchat.presentation.screen.choose_country.ChooseCountryScreen
 import ru.shtykin.testappchat.presentation.screen.login.LoginScreen
+import ru.shtykin.testappchat.presentation.screen.registration.RegistrationScreen
 import ru.shtykin.testappchat.presentation.ui.theme.TestAppChatTheme
 
 
@@ -53,7 +55,17 @@ class MainActivity : ComponentActivity() {
                         startScreenRoute = startScreenRoute,
                         navHostController = navHostController,
                         registrationScreenContent = {
+                            RegistrationScreen(
+                                uiState = uiState,
+                                onRegistrationClick = { phone, name, username ->
+                                    Log.e("DEBUG", "registration -> $phone, $name, $username")
 
+                                },
+                                onBackClick = {
+                                    navHostController.popBackStack()
+                                    viewModel.loginScreenOpened(it)
+                                }
+                            )
                         },
                         loginScreenContent = {
                             LoginScreen(
@@ -65,7 +77,10 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onRegistrationClick = {
                                     navHostController.navigate(Screen.Registration.route)
-                                    viewModel.registrationScreenOpened()
+                                    viewModel.registrationScreenOpened(it)
+                                },
+                                onLoginClick = {
+                                    viewModel.tryToLogin(it)
                                 }
                             )
                         },

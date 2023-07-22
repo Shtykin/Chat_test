@@ -18,6 +18,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,17 +44,23 @@ fun LoginScreen(
     uiState: ScreenState,
     getFlagEmoji: ((String) -> String?),
     onEmojiClick: (() -> Unit)?,
-    onRegistrationClick: (() -> Unit)?,
+    onRegistrationClick: ((String) -> Unit)?,
+    onLoginClick: ((String) -> Unit)?,
 ) {
-
-
     val country = (uiState as? ScreenState.LoginScreen)?.country
+    val phoneNumber = (uiState as? ScreenState.LoginScreen)?.phone
+    val isVisibleCodeField = (uiState as? ScreenState.LoginScreen)?.isVisibleCodeField ?: false
+    val errorMessage = (uiState as? ScreenState.LoginScreen)?.error
+
     var flagEmoji by remember {
         mutableStateOf(
             getFlagEmoji.invoke("") ?: ""
         )
     }
 
+    var error: String? by remember {
+        mutableStateOf(null)
+    }
 
     var phone by remember {
         mutableStateOf(
@@ -61,8 +69,18 @@ fun LoginScreen(
             )
         )
     }
+    SideEffect( ){
+        phoneNumber?.let {
+            phone = phone.copy(
+                text = it
+            )
+            flagEmoji = getFlagEmoji.invoke(it) ?: ""
+        }
+        error = errorMessage
+    }
 
     val phoneChanged: (TextFieldValue) -> Unit = {
+        error = null
         phone = it.copy(
             text = "+" + it.text.filter { char -> char.isDigit() },
             selection = TextRange(it.text.length + 1)
@@ -103,20 +121,12 @@ fun LoginScreen(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Row() {
-            Spacer(modifier = Modifier.weight(1f))
-            Text(
-                modifier = Modifier.padding(4.dp).clickable { onRegistrationClick?.invoke() },
-                text = "Регистрация",
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
         Column(
             modifier = Modifier.padding(32.dp),
-            verticalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            VerticalSpace(20.dp)
+            VerticalSpace(100.dp)
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = phone,
@@ -124,6 +134,8 @@ fun LoginScreen(
                 label = { Text("Номер телефона") },
                 singleLine = true,
                 enabled = true,
+                isError = error != null,
+                supportingText = {error?.let { Text(text = it) }},
                 placeholder = { Text("Введите номер телефона") },
                 leadingIcon = {
                     Text(
@@ -135,96 +147,108 @@ fun LoginScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
             )
             VerticalSpace(16.dp)
-            OutlinedButton(onClick = { }) {
-                Text(text = "Запросить код")
+            Row() {
+                OutlinedButton(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(8.dp),
+                    onClick = {onRegistrationClick?.invoke(phone.text)}
+                ) {
+                    Text(text = "Регистрация")
+                }
+                OutlinedButton(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(8.dp),
+                    onClick = { onLoginClick?.invoke(phone.text) }
+                ) {
+                    Text(text = "Вход")
+                }
             }
             VerticalSpace(16.dp)
-
-            Row(modifier = Modifier.fillMaxWidth()) {
-                CodeSymbolBox(
-                    modifier = Modifier
-                        .weight(1f)
-                        .aspectRatio(1f)
-                        .focusRequester(char1FocusRequester),
-                    value = char1,
-                    valueChanged = {
-                        char1 = it.take(1)
-                        char2FocusRequester.requestFocus()
-                    }
-                )
-                HorizontalSpace(width = 4.dp)
-                CodeSymbolBox(
-                    modifier = Modifier
-                        .weight(1f)
-                        .aspectRatio(1f)
-                        .focusRequester(char2FocusRequester),
-                    value = char2,
-                    valueChanged = {
-                        char2 = it.take(1)
-                        char3FocusRequester.requestFocus()
-                    }
-                )
-                HorizontalSpace(width = 4.dp)
-                CodeSymbolBox(
-                    modifier = Modifier
-                        .weight(1f)
-                        .aspectRatio(1f)
-                        .focusRequester(char3FocusRequester),
-                    value = char3,
-                    valueChanged = {
-                        char3 = it.take(1)
-                        char4FocusRequester.requestFocus()
-                    }
-                )
-                HorizontalSpace(width = 4.dp)
-                CodeSymbolBox(
-                    modifier = Modifier
-                        .weight(1f)
-                        .aspectRatio(1f)
-                        .focusRequester(char4FocusRequester),
-                    value = char4,
-                    valueChanged = {
-                        char4 = it.take(1)
-                        char5FocusRequester.requestFocus()
-                    }
-                )
-                HorizontalSpace(width = 4.dp)
-                CodeSymbolBox(
-                    modifier = Modifier
-                        .weight(1f)
-                        .aspectRatio(1f)
-                        .focusRequester(char5FocusRequester),
-                    value = char5,
-                    valueChanged = {
-                        char5 = it.take(1)
-                        char6FocusRequester.requestFocus()
-                    }
-                )
-                HorizontalSpace(width = 4.dp)
-                CodeSymbolBox(
-                    modifier = Modifier
-                        .weight(1f)
-                        .aspectRatio(1f)
-                        .focusRequester(char6FocusRequester),
-                    value = char6,
-                    valueChanged = {
-                        char6 = it.take(1)
-                    }
-                )
+            if (isVisibleCodeField) {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    CodeSymbolBox(
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(1f)
+                            .focusRequester(char1FocusRequester),
+                        value = char1,
+                        valueChanged = {
+                            char1 = it.take(1)
+                            char2FocusRequester.requestFocus()
+                        }
+                    )
+                    HorizontalSpace(width = 4.dp)
+                    CodeSymbolBox(
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(1f)
+                            .focusRequester(char2FocusRequester),
+                        value = char2,
+                        valueChanged = {
+                            char2 = it.take(1)
+                            char3FocusRequester.requestFocus()
+                        }
+                    )
+                    HorizontalSpace(width = 4.dp)
+                    CodeSymbolBox(
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(1f)
+                            .focusRequester(char3FocusRequester),
+                        value = char3,
+                        valueChanged = {
+                            char3 = it.take(1)
+                            char4FocusRequester.requestFocus()
+                        }
+                    )
+                    HorizontalSpace(width = 4.dp)
+                    CodeSymbolBox(
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(1f)
+                            .focusRequester(char4FocusRequester),
+                        value = char4,
+                        valueChanged = {
+                            char4 = it.take(1)
+                            char5FocusRequester.requestFocus()
+                        }
+                    )
+                    HorizontalSpace(width = 4.dp)
+                    CodeSymbolBox(
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(1f)
+                            .focusRequester(char5FocusRequester),
+                        value = char5,
+                        valueChanged = {
+                            char5 = it.take(1)
+                            char6FocusRequester.requestFocus()
+                        }
+                    )
+                    HorizontalSpace(width = 4.dp)
+                    CodeSymbolBox(
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(1f)
+                            .focusRequester(char6FocusRequester),
+                        value = char6,
+                        valueChanged = {
+                            char6 = it.take(1)
+                        }
+                    )
+                }
+                VerticalSpace(16.dp)
+                OutlinedButton(onClick = {
+                    code = char1 + char2 + char3 + char4 + char5 + char6
+                    Log.e("DEBUG", "code -> $code")
+                }) {
+                    Text(text = "Продолжить")
+                }
             }
-            VerticalSpace(16.dp)
-            OutlinedButton(onClick = {
-                code = char1 + char2 + char3 + char4 + char5 + char6
-                Log.e("DEBUG", "code -> $code")
-            }) {
-                Text(text = "Продолжить")
-            }
-
         }
-
     }
-
-
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
