@@ -10,14 +10,14 @@ import com.google.i18n.phonenumbers.Phonenumber
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import ru.shtykin.testappchat.domain.entity.Country
-import ru.shtykin.testappchat.domain.usecase.GetCurrentRegionUseCase
+import ru.shtykin.testappchat.domain.usecase.RegistrationUseCase
 import ru.shtykin.testappchat.presentation.state.ScreenState
 import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val getCurrentRegionUseCase: GetCurrentRegionUseCase
+    private val registrationUseCase: RegistrationUseCase
 ) : ViewModel() {
 
     private val _uiState =
@@ -31,7 +31,6 @@ class MainViewModel @Inject constructor(
     private val phoneNumberUtil = PhoneNumberUtil.getInstance()
 
 
-
     fun loginScreenOpened(country: Country) {
         viewModelScope.launch {
             _uiState.value = ScreenState.LoginScreen(
@@ -41,6 +40,7 @@ class MainViewModel @Inject constructor(
             )
         }
     }
+
     fun loginScreenOpened(phone: String) {
         viewModelScope.launch {
             _uiState.value = ScreenState.LoginScreen(
@@ -147,7 +147,8 @@ class MainViewModel @Inject constructor(
     }
 
 
-    private fun getCurrentRegion() = getCurrentRegionUseCase.execute()
+    private suspend fun registration(phone: String, name: String, userName: String) =
+        registrationUseCase.execute(phone, name, userName)
 
     companion object {
         private const val DEFAULT_FLAG_EMOJI = "\uD83C\uDDF7\uD83C\uDDFA"
