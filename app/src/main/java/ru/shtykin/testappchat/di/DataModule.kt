@@ -1,5 +1,6 @@
 package ru.shtykin.weatherapp.di
 
+import android.content.SharedPreferences
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Module
@@ -14,6 +15,8 @@ import ru.shtykin.testappchat.data.mapper.Mapper
 import ru.shtykin.testappchat.data.network.ApiService
 import ru.shtykin.testappchat.data.repository.RepositoryImpl
 import ru.shtykin.testappchat.domain.Repository
+import ru.shtykin.testappchat.settings.AuthStore
+import ru.shtykin.testappchat.settings.AuthStoreImpl
 import java.util.concurrent.TimeUnit
 import javax.inject.Named
 import javax.inject.Singleton
@@ -45,7 +48,6 @@ class DataModule {
     fun provideAuthApiService(@Named("AuthRetrofit") retrofit: Retrofit): ApiService {
         return retrofit.create(ApiService::class.java)
     }
-
 
     @Provides
     @Singleton
@@ -104,5 +106,11 @@ class DataModule {
     @Provides
     fun provideMapper(): Mapper {
         return Mapper()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuthStore(sharedPreferences: SharedPreferences): AuthStore {
+        return AuthStoreImpl(sharedPreferences)
     }
 }

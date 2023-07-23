@@ -25,10 +25,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import ru.shtykin.testappchat.presentation.screen.common_parts.HorizontalSpace
 import ru.shtykin.testappchat.presentation.screen.common_parts.VerticalSpace
 import ru.shtykin.testappchat.presentation.state.ScreenState
@@ -42,12 +44,14 @@ fun LoginScreen(
     getFlagEmoji: ((String) -> String?),
     onEmojiClick: (() -> Unit)?,
     onRegistrationClick: ((String) -> Unit)?,
-    onLoginClick: ((String) -> Unit)?,
+    onRequestSmsClick: ((String) -> Unit)?,
+    onLoginClick: ((String, String) -> Unit)?,
 ) {
     val country = (uiState as? ScreenState.LoginScreen)?.country
     val phoneNumber = (uiState as? ScreenState.LoginScreen)?.phone
     val isVisibleCodeField = (uiState as? ScreenState.LoginScreen)?.isVisibleCodeField ?: false
     val errorMessage = (uiState as? ScreenState.LoginScreen)?.error
+    val errorCodeMessage = (uiState as? ScreenState.LoginScreen)?.errorCode
 
     var flagEmoji by remember {
         mutableStateOf(
@@ -55,9 +59,9 @@ fun LoginScreen(
         )
     }
 
-    var error: String? by remember {
-        mutableStateOf(null)
-    }
+    var error: String? by remember { mutableStateOf(null) }
+    var errorCode: String? by remember { mutableStateOf(null) }
+    errorCodeMessage?.let { errorCode = it }
 
     var phone by remember {
         mutableStateOf(
@@ -130,9 +134,8 @@ fun LoginScreen(
                 onValueChange = phoneChanged,
                 label = { Text("Номер телефона") },
                 singleLine = true,
-                enabled = true,
-                isError = error != null,
-                supportingText = {error?.let { Text(text = it) }},
+                enabled = !isVisibleCodeField,
+                supportingText = {error?.let { Text(text = it, color = Color.Red) }},
                 placeholder = { Text("Введите номер телефона") },
                 leadingIcon = {
                     Text(
@@ -146,6 +149,7 @@ fun LoginScreen(
             VerticalSpace(16.dp)
             Row() {
                 OutlinedButton(
+                    enabled = !isVisibleCodeField,
                     modifier = Modifier
                         .weight(1f)
                         .padding(8.dp),
@@ -154,16 +158,19 @@ fun LoginScreen(
                     Text(text = "Регистрация")
                 }
                 OutlinedButton(
+                    enabled = !isVisibleCodeField,
                     modifier = Modifier
                         .weight(1f)
                         .padding(8.dp),
-                    onClick = { onLoginClick?.invoke(phone.text) }
+                    onClick = { onRequestSmsClick?.invoke(phone.text) }
                 ) {
-                    Text(text = "Вход")
+                    Text(text = "Вход по СМС")
                 }
             }
             VerticalSpace(16.dp)
             if (isVisibleCodeField) {
+                Text(text = "На номер ${phone.text} отправлена СМС с кодом. Введите его:")
+                VerticalSpace(16.dp)
                 Row(modifier = Modifier.fillMaxWidth()) {
                     CodeSymbolBox(
                         modifier = Modifier
@@ -173,7 +180,8 @@ fun LoginScreen(
                         value = char1,
                         valueChanged = {
                             char1 = it.take(1)
-                            char2FocusRequester.requestFocus()
+                            if (it.isNotEmpty()) char2FocusRequester.requestFocus()
+                            errorCode = null
                         }
                     )
                     HorizontalSpace(width = 4.dp)
@@ -185,7 +193,8 @@ fun LoginScreen(
                         value = char2,
                         valueChanged = {
                             char2 = it.take(1)
-                            char3FocusRequester.requestFocus()
+                            if (it.isNotEmpty()) char3FocusRequester.requestFocus()
+                            errorCode = null
                         }
                     )
                     HorizontalSpace(width = 4.dp)
@@ -197,7 +206,8 @@ fun LoginScreen(
                         value = char3,
                         valueChanged = {
                             char3 = it.take(1)
-                            char4FocusRequester.requestFocus()
+                            if (it.isNotEmpty()) char4FocusRequester.requestFocus()
+                            errorCode = null
                         }
                     )
                     HorizontalSpace(width = 4.dp)
@@ -209,7 +219,8 @@ fun LoginScreen(
                         value = char4,
                         valueChanged = {
                             char4 = it.take(1)
-                            char5FocusRequester.requestFocus()
+                            if (it.isNotEmpty()) char5FocusRequester.requestFocus()
+                            errorCode = null
                         }
                     )
                     HorizontalSpace(width = 4.dp)
@@ -221,7 +232,8 @@ fun LoginScreen(
                         value = char5,
                         valueChanged = {
                             char5 = it.take(1)
-                            char6FocusRequester.requestFocus()
+                            if (it.isNotEmpty()) char6FocusRequester.requestFocus()
+                            errorCode = null
                         }
                     )
                     HorizontalSpace(width = 4.dp)
@@ -233,12 +245,18 @@ fun LoginScreen(
                         value = char6,
                         valueChanged = {
                             char6 = it.take(1)
+                            errorCode = null
                         }
                     )
+                }
+                errorCode?.let{
+                    VerticalSpace(4.dp)
+                    Text(text = it, color = Color.Red, fontSize = 12.sp)
                 }
                 VerticalSpace(16.dp)
                 OutlinedButton(onClick = {
                     code = char1 + char2 + char3 + char4 + char5 + char6
+                    onLoginClick?.invoke(phone.text, code)
                 }) {
                     Text(text = "Продолжить")
                 }

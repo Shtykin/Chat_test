@@ -6,14 +6,18 @@ import ru.shtykin.testappchat.domain.entity.Country
 sealed class ScreenState {
 
     data class RegistrationScreen(
-        val temp: String
+        val phone: String,
+        val name: String,
+        val username: String,
+        val error: String?
     ) : ScreenState()
 
     data class LoginScreen(
         val phone: String? = null,
         val country: Country? = null,
         val isVisibleCodeField: Boolean,
-        val error: String?
+        val error: String?,
+        val errorCode: String?
     ) : ScreenState()
 
     data class ChooseCountryScreen(
