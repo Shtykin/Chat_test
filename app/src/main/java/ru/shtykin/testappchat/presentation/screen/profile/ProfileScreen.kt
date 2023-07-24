@@ -1,30 +1,36 @@
 package ru.shtykin.testappchat.presentation.screen.profile
 
-import android.content.Context
-import android.net.Uri
-import android.util.Log
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Button
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import ru.shtykin.testappchat.R
+import ru.shtykin.testappchat.domain.entity.Profile
+import ru.shtykin.testappchat.presentation.screen.common_parts.HorizontalSpace
 import ru.shtykin.testappchat.presentation.screen.common_parts.VerticalSpace
 import ru.shtykin.testappchat.presentation.state.ScreenState
 
@@ -32,90 +38,122 @@ import ru.shtykin.testappchat.presentation.state.ScreenState
 @Composable
 fun ProfileScreen(
     uiState: ScreenState,
-    onGetPictureClick: (() -> Unit)?,
-    onGetBase64Click: (() -> Unit)?,
+    onEditProfileClick: (() -> Unit)?,
+//    onGetPictureClick: (() -> Unit)?,
+//    onGetBase64Click: (() -> Unit)?,
 ) {
     val profile = (uiState as? ScreenState.ProfileScreen)?.profile
-    var imageUri by remember { mutableStateOf(Uri.EMPTY) }
 
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
-        onResult = {
-            imageUri = it
-            Log.e("DEBUG1", "imageUri -> $imageUri")
-        }
-    )
 
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Column(
-            modifier = Modifier.padding(32.dp),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally
+        Row(
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.Top
         ) {
-            Text(text = "ПРОФИЛЬ СКРИН")
-            Button(onClick = { launcher.launch("image/*") }) {
-                Text(text = "Выбрать изображение")
-            }
-            AsyncImage(
-                modifier = Modifier.size(250.dp),
-                model = imageUri,
-                contentDescription = null
-            )
-            VerticalSpace(height = 16.dp)
-
-
-
-            Button(onClick = { onGetPictureClick?.invoke() }) {
-                Text(text = "Выбрать изображение2")
-            }
-            Button(onClick = { onGetBase64Click?.invoke() }) {
-                Text(text = "Преобразовать")
-            }
-            VerticalSpace(height = 16.dp)
-            profile?.avatar?.let {
-                AsyncImage(
-                    modifier = Modifier.size(250.dp),
-                    model = it,
+            IconButton(onClick = { onEditProfileClick?.invoke() }) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
                     contentDescription = null
                 )
             }
+        }
+        Column(
+            modifier = Modifier.padding(32.dp),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.Start
+        ) {
+            profile?.let {
 
-//            ImageSelectionScreen()
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    if (it.avatar != null) {
+                        AsyncImage(
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .size(150.dp),
+                            model = it.avatar,
+                            contentScale = ContentScale.Crop,
+                            contentDescription = null
+                        )
+                    } else {
+                        Image(
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .size(150.dp),
+                            painter = painterResource(id = R.drawable.baseline_person_24),
+                            contentDescription = null
+                        )
+                    }
 
-//            Image(
-//                bitmap = ,
-//                contentDescription = null
-//            )
+                    HorizontalSpace(width = 16.dp)
+                    Column() {
+                        Text(
+                            text = it.username,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        VerticalSpace(height = 8.dp)
+                        Text(
+                            text = it.name,
+                            fontSize = 16.sp
+                        )
+                        VerticalSpace(height = 4.dp)
+                        Text(
+                            text = it.phone,
+                            fontSize = 16.sp
+                        )
+
+                    }
+                }
+                VerticalSpace(height = 16.dp)
+                Row() {
+                    Text(text = "Дата рождения: ")
+                    if (it.birthday.isNotEmpty()) {
+                        Text(text = it.birthday)
+                    } else {
+                        Text(text = "не заполнено")
+                    }
+                }
+                VerticalSpace(height = 8.dp)
+                Row() {
+                    Text(text = "Знак зодиака: ")
+                    if (it.zodiacSign.isNotEmpty()) {
+                        Text(text = it.zodiacSign)
+                    } else {
+                        Text(text = "не заполнено")
+                    }
+                }
+                VerticalSpace(height = 8.dp)
+                Row() {
+                    Text(text = "О себе: ")
+                    if (it.about.isNotEmpty()) {
+                        Text(text = it.about)
+                    } else {
+                        Text(text = "не заполнено")
+                    }
+                }
+            }
+
+
+//            Button(onClick = { onGetPictureClick?.invoke() }) {
+//                Text(text = "Выбрать изображение2")
+//            }
+//            VerticalSpace(height = 16.dp)
+//            profile?.avatar?.let {
+//                AsyncImage(
+//                    modifier = Modifier.size(250.dp),
+//                    model = it,
+//                    contentDescription = null
+//                )
+//            }
+
 
         }
     }
 
-}
-
-@Composable
-fun ImageSelectionScreen() {
-    val context = LocalContext.current
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
-        onResult = { uri: Uri? ->
-            uri?.let { saveImageToInternalStorage(context, it) }
-        }
-    )
-
-    Button(onClick = { launcher.launch("image/*") }) {
-        Text(text = "Select Image")
-    }
-}
-
-fun saveImageToInternalStorage(context: Context, uri: Uri) {
-    val inputStream = context.contentResolver.openInputStream(uri)
-    val outputStream = context.openFileOutput("image.jpg", Context.MODE_PRIVATE)
-    inputStream?.use { input ->
-        outputStream.use { output ->
-            input.copyTo(output)
-        }
-    }
 }

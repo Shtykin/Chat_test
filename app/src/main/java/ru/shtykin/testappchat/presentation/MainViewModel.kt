@@ -17,11 +17,16 @@ import kotlinx.coroutines.withContext
 import ru.shtykin.testappchat.domain.entity.Country
 import ru.shtykin.testappchat.domain.entity.Profile
 import ru.shtykin.testappchat.domain.usecase.CheckAuthCodeUseCase
+import ru.shtykin.testappchat.domain.usecase.GetProfileUseCase
+import ru.shtykin.testappchat.domain.usecase.PutProfileUseCase
 import ru.shtykin.testappchat.domain.usecase.RegistrationUseCase
 import ru.shtykin.testappchat.domain.usecase.SendAuthCodeUseCase
 import ru.shtykin.testappchat.presentation.state.ScreenState
 import ru.shtykin.testappchat.settings.AuthStore
 import ru.shtykin.testappchat.settings.ProfileStore
+import java.io.ByteArrayOutputStream
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
 
@@ -31,7 +36,9 @@ class MainViewModel @Inject constructor(
     private val profileStore: ProfileStore,
     private val registrationUseCase: RegistrationUseCase,
     private val sendAuthCodeUseCase: SendAuthCodeUseCase,
-    private val checkAuthCodeUseCase: CheckAuthCodeUseCase
+    private val checkAuthCodeUseCase: CheckAuthCodeUseCase,
+    private val getProfileUseCase: GetProfileUseCase,
+    private val putProfileUseCase: PutProfileUseCase
 ) : ViewModel() {
 
     private val _uiState =
@@ -186,27 +193,68 @@ class MainViewModel @Inject constructor(
     }
 
     fun profileScreenOpened() {
-        _uiState.value = ScreenState.ProfileScreen(
+
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val profile = getProfile()
+                profileStore.apply {
+                    name = profile.name
+                    username = profile.username
+                    birthday = profile.birthday
+                    city = profile.city
+                    avatar = getAvatarBase64(profile.avatar)
+                    about = profile.about
+                }
+                _uiState.value = ScreenState.ProfileScreen(
+                    profile = profile
+                )
+            } catch (e: Exception) {
+                Log.e("DEBUG1", "Exception -> ${e.message}")
+            }
+        }
+
+    }
+
+    fun editProfileScreenOpened() {
+        _uiState.value = ScreenState.EditProfileScreen(
             profile = Profile(
-                name = "Евгений",
-                username = "SuperMan",
-                birthday = "20-04-1990",
-                city = "Irkutst",
-                avatar = getAvatarBitmap()
+                phone = authStore.phone,
+                name = profileStore.name,
+                username = profileStore.username,
+                birthday = profileStore.birthday,
+//                birthday = getBirthdayString(Date(1990, 5, 20)),
+                zodiacSign = getZodiacSign(Date(1990, 5, 20)),
+                city = profileStore.city,
+                about = profileStore.about,
+                avatar = getAvatarBitmap(profileStore.avatar)
             )
         )
     }
 
-    fun updateBmp() {
-        _uiState.value = ScreenState.ProfileScreen(
-            profile = Profile(
-                name = "Евгений",
-                username = "SuperMan",
-                birthday = "20-04-1990",
-                city = "Irkutst",
-                avatar = getAvatarBitmap()
-            ),
-        )
+    fun saveProfile(profile: Profile) {
+        profileStore.apply {
+            name = profile.name
+            birthday = profile.birthday
+            city = profile.city
+            avatar = getAvatarBase64(profile.avatar)
+            about = profile.about
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                putProfile(profile)
+            } catch (e: Exception) {
+                Log.e("DEBUG1", "ex -> ${e.message}")
+            }
+        }
+
+    }
+
+
+    fun updateBmp(base64: String) {
+        if (_uiState.value is ScreenState.EditProfileScreen) {
+            val profile = (_uiState.value as ScreenState.EditProfileScreen).profile.copy(avatar = getAvatarBitmap(base64))
+            _uiState.value = ScreenState.EditProfileScreen(profile)
+        }
     }
 
     private fun parsePhone(phone: String): Boolean {
@@ -278,9 +326,61 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private fun getAvatarBitmap(): Bitmap {
-        val decodedBytes = Base64.decode(profileStore.avatar, Base64.DEFAULT)
-        return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+    private fun getAvatarBitmap(base64: String): Bitmap? {
+        return try {
+            val decodedBytes = Base64.decode(base64, Base64.DEFAULT)
+            BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun getAvatarBase64(bitmap: Bitmap?): String {
+        if (bitmap == null) return ""
+        return try {
+            val outputStream = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+            val byteArray = outputStream.toByteArray()
+            Base64.encodeToString(byteArray, Base64.DEFAULT)
+        } catch (e: Exception) {
+            ""
+        }
+    }
+
+    private fun getAvatarBitmapFromStorage(base64: String): Bitmap? {
+        return try {
+            val decodedBytes = Base64.decode(base64, Base64.DEFAULT)
+            BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun getBirthdayString(birthday: Date): String {
+        val sdf = SimpleDateFormat("d MMMM", Locale.getDefault())
+        val date = Date(birthday.time)
+        return sdf.format(date)
+    }
+
+    private fun getZodiacSign(birthday: Date): String {
+        val date = Date(birthday.time)
+        val day = date.day
+        val zodiacSign = when (date.month) {
+            1 -> if (day <= 20) "Козерог" else "Водолей"
+            2 -> if (day <= 19) "Водолей" else "Рыбы"
+            3 -> if (day <= 20) "Рыбы" else "Овен"
+            4 -> if (day <= 20) "Овен" else "Телец"
+            5 -> if (day <= 20) "Телец" else "Близнецы"
+            6 -> if (day <= 21) "Близнецы" else "Рак"
+            7 -> if (day <= 22) "Рак" else "Лев"
+            8 -> if (day <= 23) "Лев" else "Дева"
+            9 -> if (day <= 23) "Дева" else "Весы"
+            10 -> if (day <= 23) "Весы" else "Скорпион"
+            11 -> if (day <= 22) "Скорпион" else "Стрелец"
+            12 -> if (day <= 21) "Стрелец" else "Козерог"
+            else -> ""
+        }
+        return zodiacSign
     }
 
     private suspend fun registration(phone: String, name: String, userName: String) =
@@ -291,6 +391,10 @@ class MainViewModel @Inject constructor(
 
     private suspend fun checkAuthCode(phone: String, code: String) =
         checkAuthCodeUseCase.execute(phone, code)
+
+    private suspend fun getProfile() = getProfileUseCase.execute()
+
+    private suspend fun putProfile(profile: Profile) = putProfileUseCase.execute(profile)
 
     companion object {
         private const val DEFAULT_FLAG_EMOJI = "\uD83C\uDDF7\uD83C\uDDFA"

@@ -5,8 +5,10 @@ import retrofit2.http.*
 import ru.shtykin.testappchat.data.network.model.AvatarDto
 import ru.shtykin.testappchat.data.network.model.ProfileDataDto
 import ru.shtykin.testappchat.data.network.model.RequestCheckAuthCodeDto
+import ru.shtykin.testappchat.data.network.model.RequestProfileDto
 import ru.shtykin.testappchat.data.network.model.ResponseCheckAuthCodeDto
 import ru.shtykin.testappchat.data.network.model.RequestPutProfileDto
+import ru.shtykin.testappchat.data.network.model.RequestRefreshTokenDto
 import ru.shtykin.testappchat.data.network.model.RequestRegisterDto
 import ru.shtykin.testappchat.data.network.model.RequestSendAuthCodeDto
 import ru.shtykin.testappchat.data.network.model.ResponseSendAuthCodeDto
@@ -30,20 +32,18 @@ interface ApiService {
         @Body requestCheckAuthCodeDto: RequestCheckAuthCodeDto,
     ): Call<ResponseCheckAuthCodeDto>
 
+    @POST("api/v1/users/refresh-token/")
+    fun refreshToken (
+        @Body requestRefreshTokenDto: RequestRefreshTokenDto
+    ): Call<UserTokensDto>
+
     @GET("/api/v1/users/me/")
     fun getProfile (
-    ): Call<ProfileDataDto>
+    ): Call<RequestProfileDto>
 
     @PUT("/api/v1/users/me/")
     fun putProfile (
-        @Field("name") name: String,
-//        @Field("username") username: String,
-        @Field("birthday") birthday: String,
-        @Field("city") city: String,
-        @Field("vk") vk: String,
-        @Field("instagram") instagram: String,
-        @Field("status") status: String,
-        @Field("avatar") avatar: AvatarDto,
+        @Body requestPutProfileDto: RequestPutProfileDto
     ): Call<RequestPutProfileDto>
 
 }

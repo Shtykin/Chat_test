@@ -13,6 +13,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import ru.shtykin.testappchat.data.mapper.Mapper
 import ru.shtykin.testappchat.data.network.ApiService
+import ru.shtykin.testappchat.data.network.AuthInterceptor
 import ru.shtykin.testappchat.data.repository.RepositoryImpl
 import ru.shtykin.testappchat.domain.Repository
 import ru.shtykin.testappchat.settings.AuthStore
@@ -34,7 +35,7 @@ class DataModule {
         @Named("AuthApiService") authApiService: ApiService,
         mapper: Mapper
     ): Repository {
-        return RepositoryImpl(unAuthApiService, unAuthApiService, mapper)
+        return RepositoryImpl(unAuthApiService, authApiService, mapper)
     }
 
     @Provides
@@ -89,14 +90,24 @@ class DataModule {
     @Provides
     @Singleton
     @Named("AuthClient")
-    fun provideAuthOkHttpClient(): OkHttpClient {
+    fun provideAuthOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient {
         return OkHttpClient.Builder()
             .writeTimeout(5, TimeUnit.SECONDS)
             .readTimeout(5, TimeUnit.SECONDS)
+            .addInterceptor(authInterceptor)
             .addInterceptor(HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
             })
             .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuthInterceptor(
+        authStore: AuthStore,
+        @Named("UnAuthApiService") unAuthApiService: ApiService,
+    ): AuthInterceptor {
+        return AuthInterceptor(authStore, unAuthApiService)
     }
 
     @Provides

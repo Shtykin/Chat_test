@@ -24,6 +24,10 @@ class ProfileStoreImpl(private val sharedPreferences: SharedPreferences) : Profi
         get() = getStringPref(AVATAR_KEY)
         set(value) { putStringPref(AVATAR_KEY, value) }
 
+    override var about: String
+        get() = getStringPref(ABOUT_KEY)
+        set(value) { putStringPref(ABOUT_KEY, value) }
+
     private fun getStringPref(key: String): String =
         if (sharedPreferences.contains(key)) sharedPreferences.getString(key, "") ?: ""
         else ""
@@ -35,10 +39,11 @@ class ProfileStoreImpl(private val sharedPreferences: SharedPreferences) : Profi
     }
 
     companion object {
-        private const val NAME_KEY = "AuthStore.phone"
-        private const val USERNAME_KEY = "AuthStore.accessToken"
-        private const val BIRTHDAY_KEY = "AuthStore.refreshToken"
-        private const val CITY_KEY = "AuthStore.city"
-        private const val AVATAR_KEY = "AuthStore.avatar"
+        private const val NAME_KEY = "ProfileStore.NAME"
+        private const val USERNAME_KEY = "ProfileStore.USERNAME"
+        private const val BIRTHDAY_KEY = "ProfileStore.BIRTHDAY"
+        private const val CITY_KEY = "ProfileStore.city"
+        private const val AVATAR_KEY = "ProfileStore.avatar"
+        private const val ABOUT_KEY = "ProfileStore.about"
     }
 }

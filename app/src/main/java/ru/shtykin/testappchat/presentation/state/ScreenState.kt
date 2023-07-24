@@ -39,7 +39,7 @@ sealed class ScreenState {
     ) : ScreenState()
 
     data class EditProfileScreen(
-        val temp: String
+        val profile: Profile,
     ) : ScreenState()
 
 }

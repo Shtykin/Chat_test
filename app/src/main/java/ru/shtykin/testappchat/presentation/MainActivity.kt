@@ -22,10 +22,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
+import ru.shtykin.testappchat.domain.entity.Profile
 import ru.shtykin.testappchat.navigation.AppNavGraph
 import ru.shtykin.testappchat.navigation.Screen
 import ru.shtykin.testappchat.presentation.screen.all_chats.AllChatsScreen
 import ru.shtykin.testappchat.presentation.screen.choose_country.ChooseCountryScreen
+import ru.shtykin.testappchat.presentation.screen.edit_profile.EditProfileScreen
 import ru.shtykin.testappchat.presentation.screen.login.LoginScreen
 import ru.shtykin.testappchat.presentation.screen.profile.ProfileScreen
 import ru.shtykin.testappchat.presentation.screen.registration.RegistrationScreen
@@ -42,6 +44,7 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var authStore: AuthStore
+
     @Inject
     lateinit var profileStore: ProfileStore
 
@@ -51,8 +54,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val contractAvatarImage = ActivityResultContracts.GetContent()
         val launchAvatarImage = registerForActivityResult(contractAvatarImage) { uri ->
-            uri?.let { saveAvatarToStorage(it) }
-            viewModel.updateBmp()
+            uri?.let { viewModel.updateBmp(mapUriToBase64(it)) }
+
         }
         setContent {
             val navHostController = rememberNavController()
@@ -75,7 +78,6 @@ class MainActivity : ComponentActivity() {
                             RegistrationScreen(
                                 uiState = uiState,
                                 onRegistrationClick = { phone, name, username ->
-                                    Log.e("DEBUG", "registration -> $phone, $name, $username")
                                     viewModel.tryToRegister(phone, name, username) {
                                         navHostController.popBackStack()
                                         Toast.makeText(this, it, Toast.LENGTH_LONG).show()
@@ -141,12 +143,28 @@ class MainActivity : ComponentActivity() {
                         profileScreenContent = {
                             ProfileScreen(
                                 uiState = uiState,
-                                onGetPictureClick = { launchAvatarImage.launch("image/*") },
-                                onGetBase64Click = {  }
+                                onEditProfileClick = {
+                                    navHostController.navigate(Screen.EditProfile.route)
+                                    viewModel.editProfileScreenOpened()
+                                }
+//                                onGetPictureClick = { launchAvatarImage.launch("image/*") },
+//                                onGetBase64Click = {  }
                             )
                         },
                         editProfileScreenContent = {
-
+                            EditProfileScreen(
+                                uiState = uiState,
+                                onChangeAvatarClick = { launchAvatarImage.launch("image/*") },
+                                onSaveClick = {
+                                    viewModel.saveProfile(it)
+                                    viewModel.profileScreenOpened()
+                                    navHostController.navigate(Screen.Profile.route)
+                                },
+                                onCancelClick = {
+                                    viewModel.profileScreenOpened()
+                                    navHostController.navigate(Screen.Profile.route)
+                                }
+                            )
                         }
                     )
                 }
@@ -171,6 +189,7 @@ class MainActivity : ComponentActivity() {
 //        }
 //    }
 
+
     private fun saveAvatarToStorage(uri: Uri) {
         val bitmap = if (Build.VERSION.SDK_INT < 28) {
             MediaStore.Images.Media.getBitmap(contentResolver, uri)
@@ -182,6 +201,19 @@ class MainActivity : ComponentActivity() {
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
         val byteArray = outputStream.toByteArray()
         profileStore.avatar = Base64.encodeToString(byteArray, Base64.DEFAULT)
+    }
+
+    private fun mapUriToBase64(uri: Uri): String {
+        val bitmap = if (Build.VERSION.SDK_INT < 28) {
+            MediaStore.Images.Media.getBitmap(contentResolver, uri)
+        } else {
+            val source = ImageDecoder.createSource(this.contentResolver, uri)
+            ImageDecoder.decodeBitmap(source)
+        }
+        val outputStream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+        val byteArray = outputStream.toByteArray()
+        return Base64.encodeToString(byteArray, Base64.DEFAULT)
     }
 
 }

@@ -58,35 +58,21 @@ class RepositoryImpl(
     }
 
     override suspend fun getProfile(): Profile {
-        val response = apiService.getProfile()
+        val response = authApiService.getProfile()
         response.execute().body()?.let {
+            Log.e("DEBUG1", "request -> $it")
             return mapper.mapProfileDataDtoToProfile(it)
         }
         throw IllegalStateException("Response body is empty")
     }
 
-    override suspend fun putProfile(
-        name: String,
-        birthday: String,
-        city: String,
-        vk: String,
-        instagram: String,
-        status: String,
-        avatarFilename: String,
-        avatarBase64: String,
-    ) {
-        val avatarDto = AvatarDto(
-            filename = avatarFilename, base64 = avatarBase64
-        )
-        val response = apiService.putProfile(
-            name = name,
-            birthday = birthday,
-            city = city,
-            vk = vk,
-            instagram = instagram,
-            status = status,
-            avatar = avatarDto
-        )
+    override suspend fun putProfile(profile: Profile): Boolean {
+        val response = authApiService.putProfile(
+            mapper.mapProfileToRequestPutProfileDto(profile)
+        ).execute()
+        if (response.code() == 200) return true
+        response.errorBody()?.string()?.let { throw IllegalStateException(parseError(it)) }
+        throw IllegalStateException("Response body is empty")
     }
 
     private fun parseError(errorMessage: String): String? {
