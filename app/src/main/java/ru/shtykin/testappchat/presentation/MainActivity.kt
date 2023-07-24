@@ -1,10 +1,18 @@
 package ru.shtykin.testappchat.presentation
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
+import android.util.Base64
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -19,9 +27,12 @@ import ru.shtykin.testappchat.navigation.Screen
 import ru.shtykin.testappchat.presentation.screen.all_chats.AllChatsScreen
 import ru.shtykin.testappchat.presentation.screen.choose_country.ChooseCountryScreen
 import ru.shtykin.testappchat.presentation.screen.login.LoginScreen
+import ru.shtykin.testappchat.presentation.screen.profile.ProfileScreen
 import ru.shtykin.testappchat.presentation.screen.registration.RegistrationScreen
 import ru.shtykin.testappchat.presentation.ui.theme.TestAppChatTheme
 import ru.shtykin.testappchat.settings.AuthStore
+import ru.shtykin.testappchat.settings.ProfileStore
+import java.io.ByteArrayOutputStream
 import javax.inject.Inject
 
 
@@ -31,9 +42,18 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var authStore: AuthStore
+    @Inject
+    lateinit var profileStore: ProfileStore
+
+    private var avatarUri: Uri? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val contractAvatarImage = ActivityResultContracts.GetContent()
+        val launchAvatarImage = registerForActivityResult(contractAvatarImage) { uri ->
+            uri?.let { saveAvatarToStorage(it) }
+            viewModel.updateBmp()
+        }
         setContent {
             val navHostController = rememberNavController()
             val scope = rememberCoroutineScope()
@@ -108,14 +128,22 @@ class MainActivity : ComponentActivity() {
                         },
                         allChatsScreenContent = {
                             AllChatsScreen(
-                                uiState = uiState
+                                uiState = uiState,
+                                onProfileClick = {
+                                    navHostController.navigate(Screen.Profile.route)
+                                    viewModel.profileScreenOpened()
+                                }
                             )
                         },
                         chatScreenContent = {
 
                         },
                         profileScreenContent = {
-
+                            ProfileScreen(
+                                uiState = uiState,
+                                onGetPictureClick = { launchAvatarImage.launch("image/*") },
+                                onGetBase64Click = {  }
+                            )
                         },
                         editProfileScreenContent = {
 
@@ -125,4 +153,35 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+//    private fun getBase(): Bitmap? {
+//        try {
+//            avatarUri?.let { uri ->
+//                val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, uri)
+//                val outputStream = ByteArrayOutputStream()
+//                bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+//                val byteArray = outputStream.toByteArray()
+//                val encodedString = Base64.encodeToString(byteArray, Base64.DEFAULT)
+//                val decodedBytes = Base64.decode(encodedString, Base64.DEFAULT)
+//                return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+//            }
+//            return null
+//        } catch (e: Exception) {
+//            return null
+//        }
+//    }
+
+    private fun saveAvatarToStorage(uri: Uri) {
+        val bitmap = if (Build.VERSION.SDK_INT < 28) {
+            MediaStore.Images.Media.getBitmap(contentResolver, uri)
+        } else {
+            val source = ImageDecoder.createSource(this.contentResolver, uri)
+            ImageDecoder.decodeBitmap(source)
+        }
+        val outputStream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+        val byteArray = outputStream.toByteArray()
+        profileStore.avatar = Base64.encodeToString(byteArray, Base64.DEFAULT)
+    }
+
 }

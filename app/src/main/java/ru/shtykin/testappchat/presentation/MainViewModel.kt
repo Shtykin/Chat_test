@@ -1,5 +1,8 @@
 package ru.shtykin.testappchat.presentation
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.Base64
 import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -12,17 +15,20 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.shtykin.testappchat.domain.entity.Country
+import ru.shtykin.testappchat.domain.entity.Profile
 import ru.shtykin.testappchat.domain.usecase.CheckAuthCodeUseCase
 import ru.shtykin.testappchat.domain.usecase.RegistrationUseCase
 import ru.shtykin.testappchat.domain.usecase.SendAuthCodeUseCase
 import ru.shtykin.testappchat.presentation.state.ScreenState
 import ru.shtykin.testappchat.settings.AuthStore
+import ru.shtykin.testappchat.settings.ProfileStore
 import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val authStore: AuthStore,
+    private val profileStore: ProfileStore,
     private val registrationUseCase: RegistrationUseCase,
     private val sendAuthCodeUseCase: SendAuthCodeUseCase,
     private val checkAuthCodeUseCase: CheckAuthCodeUseCase
@@ -30,7 +36,13 @@ class MainViewModel @Inject constructor(
 
     private val _uiState =
         mutableStateOf<ScreenState>(
-            ScreenState.ProfileScreen("")
+            ScreenState.LoginScreen(
+                phone = null,
+                country = null,
+                isVisibleCodeField = false,
+                error = null,
+                errorCode = null
+            )
         )
 
     val uiState: State<ScreenState>
@@ -173,6 +185,30 @@ class MainViewModel @Inject constructor(
         )
     }
 
+    fun profileScreenOpened() {
+        _uiState.value = ScreenState.ProfileScreen(
+            profile = Profile(
+                name = "Евгений",
+                username = "SuperMan",
+                birthday = "20-04-1990",
+                city = "Irkutst",
+                avatar = getAvatarBitmap()
+            )
+        )
+    }
+
+    fun updateBmp() {
+        _uiState.value = ScreenState.ProfileScreen(
+            profile = Profile(
+                name = "Евгений",
+                username = "SuperMan",
+                birthday = "20-04-1990",
+                city = "Irkutst",
+                avatar = getAvatarBitmap()
+            ),
+        )
+    }
+
     private fun parsePhone(phone: String): Boolean {
         phoneNumberUtil.parse(
             phone,
@@ -242,11 +278,17 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    private fun getAvatarBitmap(): Bitmap {
+        val decodedBytes = Base64.decode(profileStore.avatar, Base64.DEFAULT)
+        return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+    }
 
     private suspend fun registration(phone: String, name: String, userName: String) =
         registrationUseCase.execute(phone, name, userName)
+
     private suspend fun sendAuthCode(phone: String) =
         sendAuthCodeUseCase.execute(phone)
+
     private suspend fun checkAuthCode(phone: String, code: String) =
         checkAuthCodeUseCase.execute(phone, code)
 

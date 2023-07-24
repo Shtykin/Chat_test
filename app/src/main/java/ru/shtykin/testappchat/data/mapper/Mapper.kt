@@ -1,5 +1,8 @@
 package ru.shtykin.testappchat.data.mapper
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.Base64
 import ru.shtykin.testappchat.data.network.model.ProfileDataDto
 import ru.shtykin.testappchat.data.network.model.ResponseCheckAuthCodeDto
 import ru.shtykin.testappchat.data.network.model.UserTokensDto
@@ -13,8 +16,13 @@ class Mapper {
         username = profileDataDto.username,
         birthday = profileDataDto.birthday,
         city = profileDataDto.city,
-        avatar = profileDataDto.avatar
+        avatar = mapBase64ToBitmap(profileDataDto.avatar)
     )
+
+    private fun mapBase64ToBitmap(base64: String): Bitmap {
+        val decodedBytes = Base64.decode(base64, Base64.DEFAULT)
+        return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+    }
 
     fun mapUserTokensDtoToUserTokens(userTokensDto: UserTokensDto) = UserTokens(
         accessToken = userTokensDto.accessToken,

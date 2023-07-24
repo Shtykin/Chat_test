@@ -17,6 +17,8 @@ import ru.shtykin.testappchat.data.repository.RepositoryImpl
 import ru.shtykin.testappchat.domain.Repository
 import ru.shtykin.testappchat.settings.AuthStore
 import ru.shtykin.testappchat.settings.AuthStoreImpl
+import ru.shtykin.testappchat.settings.ProfileStore
+import ru.shtykin.testappchat.settings.ProfileStoreImpl
 import java.util.concurrent.TimeUnit
 import javax.inject.Named
 import javax.inject.Singleton
@@ -112,5 +114,11 @@ class DataModule {
     @Singleton
     fun provideAuthStore(sharedPreferences: SharedPreferences): AuthStore {
         return AuthStoreImpl(sharedPreferences)
+    }
+
+    @Provides
+    @Singleton
+    fun provideProfileStore(sharedPreferences: SharedPreferences): ProfileStore {
+        return ProfileStoreImpl(sharedPreferences)
     }
 }
