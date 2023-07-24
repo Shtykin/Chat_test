@@ -97,6 +97,8 @@ dependencies {
     implementation 'com.googlecode.libphonenumber:libphonenumber:8.13.17'
 
     implementation "androidx.compose.ui:ui-text-google-fonts:1.4.3"
+
+    implementation 'com.sealwu.jsontokotlin:library:3.7.4'
 }
 
 kapt {
