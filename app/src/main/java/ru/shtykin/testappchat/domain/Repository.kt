@@ -8,14 +8,5 @@ interface Repository {
     suspend fun sendAuthCode(phone: String): Boolean
     suspend fun checkAuthCode(phone: String, code: String): UserTokens
     suspend fun getProfile(): Profile
-    suspend fun putProfile(
-        name: String,
-        birthday: String,
-        city: String,
-        vk: String,
-        instagram: String,
-        status: String,
-        avatarFilename: String,
-        avatarBase64: String,
-    )
+    suspend fun putProfile(profile: Profile): Boolean
 }

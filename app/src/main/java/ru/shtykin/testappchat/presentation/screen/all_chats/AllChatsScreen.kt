@@ -1,6 +1,7 @@
 package ru.shtykin.testappchat.presentation.screen.all_chats
 
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Button
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalDrawerSheet
@@ -17,6 +18,7 @@ import ru.shtykin.testappchat.presentation.state.ScreenState
 @Composable
 fun AllChatsScreen(
     uiState: ScreenState,
+    onProfileClick: (() -> Unit)?,
 ) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
 
@@ -34,7 +36,9 @@ fun AllChatsScreen(
 
     Scaffold() { paddingValues ->
         LazyColumn(contentPadding = paddingValues) {
-            item { Text(text = "Список чатов") }
+            item { Button(onClick = { onProfileClick?.invoke() }) {
+                Text(text = "Профиль")
+            } }
         }
 
     }

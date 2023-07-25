@@ -11,12 +11,16 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import ru.shtykin.testappchat.constants.Constants
 import ru.shtykin.testappchat.data.mapper.Mapper
 import ru.shtykin.testappchat.data.network.ApiService
+import ru.shtykin.testappchat.data.network.AuthInterceptor
 import ru.shtykin.testappchat.data.repository.RepositoryImpl
 import ru.shtykin.testappchat.domain.Repository
 import ru.shtykin.testappchat.settings.AuthStore
 import ru.shtykin.testappchat.settings.AuthStoreImpl
+import ru.shtykin.testappchat.settings.ProfileStore
+import ru.shtykin.testappchat.settings.ProfileStoreImpl
 import java.util.concurrent.TimeUnit
 import javax.inject.Named
 import javax.inject.Singleton
@@ -32,7 +36,7 @@ class DataModule {
         @Named("AuthApiService") authApiService: ApiService,
         mapper: Mapper
     ): Repository {
-        return RepositoryImpl(unAuthApiService, unAuthApiService, mapper)
+        return RepositoryImpl(unAuthApiService, authApiService, mapper)
     }
 
     @Provides
@@ -54,7 +58,7 @@ class DataModule {
     @Named("UnAuthRetrofit")
     fun provideRetrofit(gson: Gson, @Named("UnAuthClient") okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("https://plannerok.ru/")
+            .baseUrl(Constants.baseUrl)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .client(okHttpClient)
             .build()
@@ -65,7 +69,7 @@ class DataModule {
     @Named("AuthRetrofit")
     fun provideAuthRetrofit(gson: Gson, @Named("AuthClient") okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("https://plannerok.ru/")
+            .baseUrl(Constants.baseUrl)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .client(okHttpClient)
             .build()
@@ -87,14 +91,24 @@ class DataModule {
     @Provides
     @Singleton
     @Named("AuthClient")
-    fun provideAuthOkHttpClient(): OkHttpClient {
+    fun provideAuthOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient {
         return OkHttpClient.Builder()
             .writeTimeout(5, TimeUnit.SECONDS)
             .readTimeout(5, TimeUnit.SECONDS)
+            .addInterceptor(authInterceptor)
             .addInterceptor(HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
             })
             .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuthInterceptor(
+        authStore: AuthStore,
+        @Named("UnAuthApiService") unAuthApiService: ApiService,
+    ): AuthInterceptor {
+        return AuthInterceptor(authStore, unAuthApiService)
     }
 
     @Provides
@@ -112,5 +126,11 @@ class DataModule {
     @Singleton
     fun provideAuthStore(sharedPreferences: SharedPreferences): AuthStore {
         return AuthStoreImpl(sharedPreferences)
+    }
+
+    @Provides
+    @Singleton
+    fun provideProfileStore(sharedPreferences: SharedPreferences): ProfileStore {
+        return ProfileStoreImpl(sharedPreferences)
     }
 }
