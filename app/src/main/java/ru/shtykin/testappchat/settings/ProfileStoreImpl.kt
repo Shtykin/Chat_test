@@ -24,6 +24,10 @@ class ProfileStoreImpl(private val sharedPreferences: SharedPreferences) : Profi
         get() = getStringPref(AVATAR_KEY)
         set(value) { putStringPref(AVATAR_KEY, value) }
 
+    override var avatarUrl: String
+        get() = getStringPref(AVATAR_URL_KEY)
+        set(value) { putStringPref(AVATAR_URL_KEY, value) }
+
     override var about: String
         get() = getStringPref(ABOUT_KEY)
         set(value) { putStringPref(ABOUT_KEY, value) }
@@ -44,6 +48,7 @@ class ProfileStoreImpl(private val sharedPreferences: SharedPreferences) : Profi
         private const val BIRTHDAY_KEY = "ProfileStore.BIRTHDAY"
         private const val CITY_KEY = "ProfileStore.city"
         private const val AVATAR_KEY = "ProfileStore.avatar"
+        private const val AVATAR_URL_KEY = "ProfileStore.avatarUrl"
         private const val ABOUT_KEY = "ProfileStore.about"
     }
 }

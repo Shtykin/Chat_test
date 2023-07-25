@@ -8,5 +8,6 @@ data class ProfileDataDto(
     @SerializedName("phone") val phone: String,
     @SerializedName("city") val city: String,
     @SerializedName("birthday") val birthday: String,
-    @SerializedName("avatar") val avatar: String,
+    @SerializedName("avatars") val avatarsDto: AvatarsDto?,
+    @SerializedName("status") val status: String,
 )

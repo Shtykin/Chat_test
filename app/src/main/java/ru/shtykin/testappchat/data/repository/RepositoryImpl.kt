@@ -60,7 +60,6 @@ class RepositoryImpl(
     override suspend fun getProfile(): Profile {
         val response = authApiService.getProfile()
         response.execute().body()?.let {
-            Log.e("DEBUG1", "request -> $it")
             return mapper.mapProfileDataDtoToProfile(it)
         }
         throw IllegalStateException("Response body is empty")

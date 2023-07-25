@@ -11,6 +11,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import ru.shtykin.testappchat.constants.Constants
 import ru.shtykin.testappchat.data.mapper.Mapper
 import ru.shtykin.testappchat.data.network.ApiService
 import ru.shtykin.testappchat.data.network.AuthInterceptor
@@ -57,7 +58,7 @@ class DataModule {
     @Named("UnAuthRetrofit")
     fun provideRetrofit(gson: Gson, @Named("UnAuthClient") okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("https://plannerok.ru/")
+            .baseUrl(Constants.baseUrl)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .client(okHttpClient)
             .build()
@@ -68,7 +69,7 @@ class DataModule {
     @Named("AuthRetrofit")
     fun provideAuthRetrofit(gson: Gson, @Named("AuthClient") okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("https://plannerok.ru/")
+            .baseUrl(Constants.baseUrl)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .client(okHttpClient)
             .build()

@@ -8,7 +8,9 @@ data class Profile(
     val username: String,
     val birthday: String,
     val zodiacSign: String,
+    val age: Int?,
     val city: String,
-    val about: String,
+    val status: String,
     val avatar: Bitmap?,
+    val avatarUrl: String?
 )

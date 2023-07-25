@@ -10,12 +10,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,9 +25,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import ru.shtykin.testappchat.R
-import ru.shtykin.testappchat.domain.entity.Profile
 import ru.shtykin.testappchat.presentation.screen.common_parts.HorizontalSpace
 import ru.shtykin.testappchat.presentation.screen.common_parts.VerticalSpace
 import ru.shtykin.testappchat.presentation.state.ScreenState
@@ -71,12 +68,12 @@ fun ProfileScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Start
                 ) {
-                    if (it.avatar != null) {
-                        AsyncImage(
+                    if (it.avatarUrl != null) {
+                       Image(
                             modifier = Modifier
                                 .clip(CircleShape)
-                                .size(150.dp),
-                            model = it.avatar,
+                                .size(100.dp),
+                            painter = rememberAsyncImagePainter(it.avatarUrl),
                             contentScale = ContentScale.Crop,
                             contentDescription = null
                         )
@@ -84,7 +81,7 @@ fun ProfileScreen(
                         Image(
                             modifier = Modifier
                                 .clip(CircleShape)
-                                .size(150.dp),
+                                .size(100.dp),
                             painter = painterResource(id = R.drawable.baseline_person_24),
                             contentDescription = null
                         )
@@ -99,12 +96,12 @@ fun ProfileScreen(
                         )
                         VerticalSpace(height = 8.dp)
                         Text(
-                            text = it.name,
+                            text = "${it.name}, ${it.city}",
                             fontSize = 16.sp
                         )
                         VerticalSpace(height = 4.dp)
                         Text(
-                            text = it.phone,
+                            text = "+${it.phone}",
                             fontSize = 16.sp
                         )
 
@@ -112,9 +109,9 @@ fun ProfileScreen(
                 }
                 VerticalSpace(height = 16.dp)
                 Row() {
-                    Text(text = "Дата рождения: ")
+                    Text(text = "Возраст: ")
                     if (it.birthday.isNotEmpty()) {
-                        Text(text = it.birthday)
+                        Text(text = it.age.toString())
                     } else {
                         Text(text = "не заполнено")
                     }
@@ -131,8 +128,8 @@ fun ProfileScreen(
                 VerticalSpace(height = 8.dp)
                 Row() {
                     Text(text = "О себе: ")
-                    if (it.about.isNotEmpty()) {
-                        Text(text = it.about)
+                    if (it.status.isNotEmpty()) {
+                        Text(text = it.status)
                     } else {
                         Text(text = "не заполнено")
                     }

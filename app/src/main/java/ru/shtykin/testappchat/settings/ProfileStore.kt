@@ -6,5 +6,6 @@ interface ProfileStore {
     var birthday: String
     var city: String
     var avatar: String
+    var avatarUrl: String
     var about: String
 }

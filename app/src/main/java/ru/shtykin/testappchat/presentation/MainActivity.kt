@@ -156,9 +156,10 @@ class MainActivity : ComponentActivity() {
                                 uiState = uiState,
                                 onChangeAvatarClick = { launchAvatarImage.launch("image/*") },
                                 onSaveClick = {
-                                    viewModel.saveProfile(it)
-                                    viewModel.profileScreenOpened()
-                                    navHostController.navigate(Screen.Profile.route)
+                                    viewModel.saveProfile(
+                                        profile = it,
+                                        onSuccess = {navHostController.navigate(Screen.Profile.route)}
+                                    )
                                 },
                                 onCancelClick = {
                                     viewModel.profileScreenOpened()

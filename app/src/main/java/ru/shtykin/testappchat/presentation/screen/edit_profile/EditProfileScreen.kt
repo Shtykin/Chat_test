@@ -1,6 +1,7 @@
 package ru.shtykin.testappchat.presentation.screen.edit_profile
 
 import android.graphics.Bitmap
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -34,11 +35,15 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import ru.shtykin.testappchat.R
 import ru.shtykin.testappchat.domain.entity.Profile
 import ru.shtykin.testappchat.presentation.screen.common_parts.HorizontalSpace
 import ru.shtykin.testappchat.presentation.screen.common_parts.VerticalSpace
+import ru.shtykin.testappchat.presentation.screen.edit_profile.DateDefaults.DATE_LENGTH
+import ru.shtykin.testappchat.presentation.screen.edit_profile.DateDefaults.DATE_MASK
 import ru.shtykin.testappchat.presentation.state.ScreenState
+import ru.shtykin.testappchat.presentation.utils.DateTransformation
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,17 +55,24 @@ fun EditProfileScreen(
     onCancelClick: (() -> Unit)?,
 ) {
     val profile = (uiState as? ScreenState.EditProfileScreen)?.profile
+    Log.e("DEBUG1", "profile -> $profile")
     var name: String by remember { mutableStateOf("") }
     var birthday: String by remember { mutableStateOf("") }
     var city: String by remember { mutableStateOf("") }
     var about: String by remember { mutableStateOf("") }
     var avatar: Bitmap? by remember { mutableStateOf(null) }
+    var avatarUrl: String? by remember { mutableStateOf(null) }
+    var date by remember { mutableStateOf("") }
 
     LaunchedEffect(key1 = Unit) {
         profile?.name?.let { name = it }
         profile?.birthday?.let { birthday = it }
         profile?.city?.let { city = it }
-        profile?.about?.let { about = it }
+        profile?.status?.let { about = it }
+        profile?.avatarUrl?.let {
+            avatarUrl = it
+            Log.e("DEBUG1", "avatarUrl -> $avatarUrl")
+        }
 
     }
     SideEffect {
@@ -77,13 +89,22 @@ fun EditProfileScreen(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            profile?.let {
+            profile?.let { it ->
                 if (it.avatar != null) {
                     AsyncImage(
                         modifier = Modifier
                             .clip(CircleShape)
                             .size(150.dp),
                         model = it.avatar,
+                        contentScale = ContentScale.Crop,
+                        contentDescription = null
+                    )
+                } else if (avatarUrl != null) {
+                    Image(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .size(150.dp),
+                        painter = rememberAsyncImagePainter(avatarUrl),
                         contentScale = ContentScale.Crop,
                         contentDescription = null
                     )
@@ -120,8 +141,9 @@ fun EditProfileScreen(
                 VerticalSpace(height = 8.dp)
                 OutlinedTextField(
                     modifier = Modifier.fillMaxWidth(),
-                    value = birthday,
-                    onValueChange = { birthday = it },
+                    value = date,
+                    onValueChange = { if (it.length <= DATE_LENGTH) date = it },
+                    visualTransformation = DateTransformation(DATE_MASK),
                     label = { Text("Дата рождения") },
                     singleLine = true,
                 )
@@ -165,9 +187,11 @@ fun EditProfileScreen(
                                     username = profile.username,
                                     birthday = birthday,
                                     zodiacSign = "",
+                                    age = null,
                                     city = city,
-                                    about = about,
-                                    avatar = avatar
+                                    status = about,
+                                    avatar = avatar,
+                                    avatarUrl = profile.avatarUrl
                                 )
                             )
                         }
@@ -178,4 +202,10 @@ fun EditProfileScreen(
             }
         }
     }
+}
+
+
+object DateDefaults {
+    const val DATE_MASK = "##-##-####"
+    const val DATE_LENGTH = 8 // Equals to "##/##/####".count { it == '#' }
 }

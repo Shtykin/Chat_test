@@ -203,7 +203,8 @@ class MainViewModel @Inject constructor(
                     birthday = profile.birthday
                     city = profile.city
                     avatar = getAvatarBase64(profile.avatar)
-                    about = profile.about
+                    about = profile.status
+                    avatarUrl = profile.avatarUrl ?: ""
                 }
                 _uiState.value = ScreenState.ProfileScreen(
                     profile = profile
@@ -222,26 +223,49 @@ class MainViewModel @Inject constructor(
                 name = profileStore.name,
                 username = profileStore.username,
                 birthday = profileStore.birthday,
-//                birthday = getBirthdayString(Date(1990, 5, 20)),
                 zodiacSign = getZodiacSign(Date(1990, 5, 20)),
+                age = getAge(profileStore.birthday),
                 city = profileStore.city,
-                about = profileStore.about,
-                avatar = getAvatarBitmap(profileStore.avatar)
+                status = profileStore.about,
+                avatar = getAvatarBitmap(profileStore.avatar),
+                avatarUrl = profileStore.avatarUrl.ifEmpty { null }
             )
         )
     }
 
-    fun saveProfile(profile: Profile) {
+    fun saveProfile(
+        profile: Profile,
+        onSuccess: (() -> Unit)? = null,
+    ) {
         profileStore.apply {
             name = profile.name
             birthday = profile.birthday
             city = profile.city
             avatar = getAvatarBase64(profile.avatar)
-            about = profile.about
+            about = profile.status
         }
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                putProfile(profile)
+                val result = putProfile(profile)
+                Log.e("DEBUG1", "put result -> $result")
+                if (result) {
+                    val newProfile = getProfile()
+                    profileStore.apply {
+                        name = newProfile.name
+                        username = newProfile.username
+                        birthday = newProfile.birthday
+                        city = newProfile.city
+                        avatar = getAvatarBase64(newProfile.avatar)
+                        about = newProfile.status
+                        avatarUrl = newProfile.avatarUrl ?: ""
+                    }
+                    _uiState.value = ScreenState.ProfileScreen(
+                        profile = newProfile
+                    )
+                    withContext(Dispatchers.Main) {
+                        onSuccess?.invoke()
+                    }
+                }
             } catch (e: Exception) {
                 Log.e("DEBUG1", "ex -> ${e.message}")
             }
@@ -381,6 +405,17 @@ class MainViewModel @Inject constructor(
             else -> ""
         }
         return zodiacSign
+    }
+
+    private fun getAge(birthday:String): Int? {
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val birthdayTimestamp = try {
+            sdf.parse(birthday)?.time
+        } catch (e: Exception) {
+            return null
+        } ?: return null
+        val currentDate = System.currentTimeMillis()
+        return Date(currentDate).year - Date(birthdayTimestamp).year
     }
 
     private suspend fun registration(phone: String, name: String, userName: String) =
