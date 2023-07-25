@@ -35,11 +35,15 @@ sealed class ScreenState {
     ) : ScreenState()
 
     data class ProfileScreen(
-        val profile: Profile,
+        val profile: Profile?,
+        val isLoading: Boolean,
+        val error: String?
     ) : ScreenState()
 
     data class EditProfileScreen(
         val profile: Profile,
+        val isLoading: Boolean,
+        val error: String?
     ) : ScreenState()
 
 }

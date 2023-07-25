@@ -106,7 +106,6 @@ class MainViewModel @Inject constructor(
                 )
             }
         }
-
     }
 
     fun tryToRegister(
@@ -134,7 +133,6 @@ class MainViewModel @Inject constructor(
                     errorCode = null
                 )
             } catch (e: Exception) {
-                Log.e("DEBUG", "tryToRegister e -> ${e.message}")
                 _uiState.value = ScreenState.RegistrationScreen(
                     phone = phone,
                     name = name,
@@ -193,27 +191,37 @@ class MainViewModel @Inject constructor(
     }
 
     fun profileScreenOpened() {
-
         viewModelScope.launch(Dispatchers.IO) {
+            _uiState.value = ScreenState.ProfileScreen(
+                profile = null,
+                isLoading = true,
+                error = null
+            )
+            val currentState = _uiState.value as ScreenState.ProfileScreen
             try {
                 val profile = getProfile()
                 profileStore.apply {
-                    name = profile.name
-                    username = profile.username
-                    birthday = profile.birthday
-                    city = profile.city
+                    name = profile.name ?: ""
+                    username = profile.username ?: ""
+                    birthday = profile.birthday ?: ""
+                    city = profile.city ?: ""
                     avatar = getAvatarBase64(profile.avatar)
-                    about = profile.status
+                    about = profile.status ?: ""
                     avatarUrl = profile.avatarUrl ?: ""
                 }
                 _uiState.value = ScreenState.ProfileScreen(
-                    profile = profile
+                    profile = profile,
+                    isLoading = false,
+                    error = null
                 )
             } catch (e: Exception) {
-                Log.e("DEBUG1", "Exception -> ${e.message}")
+                _uiState.value = ScreenState.ProfileScreen(
+                    profile = null,
+                    isLoading = false,
+                    error = e.message
+                )
             }
         }
-
     }
 
     fun editProfileScreenOpened() {
@@ -223,13 +231,15 @@ class MainViewModel @Inject constructor(
                 name = profileStore.name,
                 username = profileStore.username,
                 birthday = profileStore.birthday,
-                zodiacSign = getZodiacSign(Date(1990, 5, 20)),
+                zodiacSign = getZodiacSign(profileStore.birthday),
                 age = getAge(profileStore.birthday),
                 city = profileStore.city,
                 status = profileStore.about,
                 avatar = getAvatarBitmap(profileStore.avatar),
                 avatarUrl = profileStore.avatarUrl.ifEmpty { null }
-            )
+            ),
+            isLoading = false,
+            error = null
         )
     }
 
@@ -237,47 +247,53 @@ class MainViewModel @Inject constructor(
         profile: Profile,
         onSuccess: (() -> Unit)? = null,
     ) {
-        profileStore.apply {
-            name = profile.name
-            birthday = profile.birthday
-            city = profile.city
-            avatar = getAvatarBase64(profile.avatar)
-            about = profile.status
-        }
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val result = putProfile(profile)
-                Log.e("DEBUG1", "put result -> $result")
-                if (result) {
-                    val newProfile = getProfile()
-                    profileStore.apply {
-                        name = newProfile.name
-                        username = newProfile.username
-                        birthday = newProfile.birthday
-                        city = newProfile.city
-                        avatar = getAvatarBase64(newProfile.avatar)
-                        about = newProfile.status
-                        avatarUrl = newProfile.avatarUrl ?: ""
+        if (_uiState.value is ScreenState.EditProfileScreen)
+        {
+            val currentState = _uiState.value as ScreenState.EditProfileScreen
+            _uiState.value = currentState.copy(isLoading = true)
+            profileStore.apply {
+                name = profile.name ?: ""
+                birthday = profile.birthday ?: ""
+                city = profile.city ?: ""
+                avatar = getAvatarBase64(profile.avatar)
+                about = profile.status ?: ""
+            }
+            viewModelScope.launch(Dispatchers.IO) {
+                try {
+                    val result = putProfile(profile)
+                    Log.e("DEBUG1", "put result -> $result")
+                    if (result) {
+                        val newProfile = getProfile()
+                        profileStore.apply {
+                            name = newProfile.name ?: ""
+                            username = newProfile.username ?: ""
+                            birthday = newProfile.birthday ?: ""
+                            city = newProfile.city ?: ""
+                            avatar = getAvatarBase64(newProfile.avatar)
+                            about = newProfile.status ?: ""
+                            avatarUrl = newProfile.avatarUrl ?: ""
+                        }
+                        _uiState.value = ScreenState.ProfileScreen(
+                            profile = newProfile,
+                            isLoading = false,
+                            error = null
+                        )
+                        withContext(Dispatchers.Main) {
+                            onSuccess?.invoke()
+                        }
                     }
-                    _uiState.value = ScreenState.ProfileScreen(
-                        profile = newProfile
-                    )
-                    withContext(Dispatchers.Main) {
-                        onSuccess?.invoke()
-                    }
+                } catch (e: Exception) {
+                    _uiState.value = currentState.copy(error = e.message, isLoading = false)
                 }
-            } catch (e: Exception) {
-                Log.e("DEBUG1", "ex -> ${e.message}")
             }
         }
-
     }
-
 
     fun updateBmp(base64: String) {
         if (_uiState.value is ScreenState.EditProfileScreen) {
+            val currentState = _uiState.value as ScreenState.EditProfileScreen
             val profile = (_uiState.value as ScreenState.EditProfileScreen).profile.copy(avatar = getAvatarBitmap(base64))
-            _uiState.value = ScreenState.EditProfileScreen(profile)
+            _uiState.value = currentState.copy(profile = profile)
         }
     }
 
@@ -386,36 +402,42 @@ class MainViewModel @Inject constructor(
         return sdf.format(date)
     }
 
-    private fun getZodiacSign(birthday: Date): String {
-        val date = Date(birthday.time)
-        val day = date.day
-        val zodiacSign = when (date.month) {
-            1 -> if (day <= 20) "Козерог" else "Водолей"
-            2 -> if (day <= 19) "Водолей" else "Рыбы"
-            3 -> if (day <= 20) "Рыбы" else "Овен"
-            4 -> if (day <= 20) "Овен" else "Телец"
-            5 -> if (day <= 20) "Телец" else "Близнецы"
-            6 -> if (day <= 21) "Близнецы" else "Рак"
-            7 -> if (day <= 22) "Рак" else "Лев"
-            8 -> if (day <= 23) "Лев" else "Дева"
-            9 -> if (day <= 23) "Дева" else "Весы"
-            10 -> if (day <= 23) "Весы" else "Скорпион"
-            11 -> if (day <= 22) "Скорпион" else "Стрелец"
-            12 -> if (day <= 21) "Стрелец" else "Козерог"
-            else -> ""
+    private fun getZodiacSign(birthday: String?): String {
+        if (birthday == null) return ""
+        val zodiacSign = try {
+            val day = birthday.take(2).toInt()
+            val month = birthday.drop(2).take(2).toInt()
+            when (month) {
+                1 -> if (day <= 20) "Козерог" else "Водолей"
+                2 -> if (day <= 19) "Водолей" else "Рыбы"
+                3 -> if (day <= 20) "Рыбы" else "Овен"
+                4 -> if (day <= 20) "Овен" else "Телец"
+                5 -> if (day <= 20) "Телец" else "Близнецы"
+                6 -> if (day <= 21) "Близнецы" else "Рак"
+                7 -> if (day <= 22) "Рак" else "Лев"
+                8 -> if (day <= 23) "Лев" else "Дева"
+                9 -> if (day <= 23) "Дева" else "Весы"
+                10 -> if (day <= 23) "Весы" else "Скорпион"
+                11 -> if (day <= 22) "Скорпион" else "Стрелец"
+                12 -> if (day <= 21) "Стрелец" else "Козерог"
+                else -> ""
+            }
+        } catch (e: Exception) {
+            ""
         }
         return zodiacSign
     }
 
-    private fun getAge(birthday:String): Int? {
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    private fun getAge(birthday:String?): String? {
+        if (birthday.isNullOrEmpty()) return null
+        val sdf = SimpleDateFormat("ddMMyyyy", Locale.getDefault())
         val birthdayTimestamp = try {
             sdf.parse(birthday)?.time
         } catch (e: Exception) {
             return null
         } ?: return null
         val currentDate = System.currentTimeMillis()
-        return Date(currentDate).year - Date(birthdayTimestamp).year
+        return (Date(currentDate).year - Date(birthdayTimestamp).year).toString()
     }
 
     private suspend fun registration(phone: String, name: String, userName: String) =

@@ -112,7 +112,9 @@ class MainActivity : ComponentActivity() {
                                         phone = phone,
                                         code = code,
                                         onSuccess = {
-                                            navHostController.navigate(Screen.AllChats.route)
+                                            navHostController.navigate(Screen.AllChats.route) {
+                                                popUpTo(Screen.Login.route) {inclusive = true}
+                                            }
                                         }
                                     )
                                 }
@@ -132,7 +134,9 @@ class MainActivity : ComponentActivity() {
                             AllChatsScreen(
                                 uiState = uiState,
                                 onProfileClick = {
-                                    navHostController.navigate(Screen.Profile.route)
+                                    navHostController.navigate(Screen.Profile.route){
+                                        popUpTo(Screen.AllChats.route)
+                                    }
                                     viewModel.profileScreenOpened()
                                 }
                             )
@@ -146,9 +150,12 @@ class MainActivity : ComponentActivity() {
                                 onEditProfileClick = {
                                     navHostController.navigate(Screen.EditProfile.route)
                                     viewModel.editProfileScreenOpened()
+                                },
+                                onBackClick = {
+                                    navHostController.navigate(Screen.AllChats.route){
+                                        popUpTo(Screen.AllChats.route){inclusive = true}
+                                    }
                                 }
-//                                onGetPictureClick = { launchAvatarImage.launch("image/*") },
-//                                onGetBase64Click = {  }
                             )
                         },
                         editProfileScreenContent = {
