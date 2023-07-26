@@ -1,11 +1,13 @@
 package ru.shtykin.weatherapp.di
 
+import android.content.Context
 import android.content.SharedPreferences
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -34,9 +36,11 @@ class DataModule {
     fun provideRepository(
         @Named("UnAuthApiService") unAuthApiService: ApiService,
         @Named("AuthApiService") authApiService: ApiService,
-        mapper: Mapper
+        mapper: Mapper,
+        profileStore: ProfileStore,
+        @ApplicationContext context: Context
     ): Repository {
-        return RepositoryImpl(unAuthApiService, authApiService, mapper)
+        return RepositoryImpl(unAuthApiService, authApiService, mapper, profileStore, context)
     }
 
     @Provides

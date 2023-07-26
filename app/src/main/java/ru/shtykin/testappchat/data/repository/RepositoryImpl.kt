@@ -1,10 +1,16 @@
 package ru.shtykin.testappchat.data.repository
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import android.telephony.TelephonyManager
 import android.util.Log
 import androidx.core.content.ContextCompat.getSystemService
+import coil.ImageLoader
+import coil.request.ImageRequest
+import coil.request.SuccessResult
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
@@ -21,13 +27,19 @@ import ru.shtykin.testappchat.data.network.model.RequestSendAuthCodeDto
 import ru.shtykin.testappchat.domain.Repository
 import ru.shtykin.testappchat.domain.entity.Profile
 import ru.shtykin.testappchat.domain.entity.UserTokens
+import ru.shtykin.testappchat.settings.ProfileStore
+import java.io.IOException
+import java.net.HttpURLConnection
+import java.net.URL
 import java.util.Locale
 
 
 class RepositoryImpl(
     private val apiService: ApiService,
     private val authApiService: ApiService,
-    private val mapper: Mapper
+    private val mapper: Mapper,
+    private val profileStore: ProfileStore,
+    private val context: Context
 ) : Repository {
 
     override suspend fun registration(phone: String, name: String, userName: String): UserTokens {
@@ -91,5 +103,16 @@ class RepositoryImpl(
             null
         }
         return message
+    }
+
+    override suspend fun getBitmapFromUrl(url: String): Bitmap {
+        val loader = ImageLoader(context)
+        val request = ImageRequest.Builder(context)
+            .data(url)
+            .allowHardware(false) // Disable hardware bitmaps.
+            .build()
+
+        val result = (loader.execute(request) as SuccessResult).drawable
+        return (result as BitmapDrawable).bitmap
     }
 }

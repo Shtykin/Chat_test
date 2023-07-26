@@ -7,5 +7,5 @@ interface ProfileStore {
     var city: String
     var avatar: String
     var avatarUrl: String
-    var about: String
+    var status: String
 }

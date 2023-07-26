@@ -41,21 +41,16 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val viewModel: MainViewModel by viewModels()
-
     @Inject
     lateinit var authStore: AuthStore
-
     @Inject
     lateinit var profileStore: ProfileStore
-
-    private var avatarUri: Uri? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val contractAvatarImage = ActivityResultContracts.GetContent()
         val launchAvatarImage = registerForActivityResult(contractAvatarImage) { uri ->
             uri?.let { viewModel.updateBmp(mapUriToBase64(it)) }
-
         }
         setContent {
             val navHostController = rememberNavController()
@@ -63,20 +58,16 @@ class MainActivity : ComponentActivity() {
             val uiState by viewModel.uiState
             val startScreenRoute =
                 if (authStore.isAuthenticated()) Screen.AllChats.route else Screen.Login.route
-
+            if (authStore.isAuthenticated()) viewModel.allChatsScreenOpened()
             TestAppChatTheme(
-
             ) {
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                    modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
                 ) {
-                    AppNavGraph(
-                        startScreenRoute = startScreenRoute,
+                    AppNavGraph(startScreenRoute = startScreenRoute,
                         navHostController = navHostController,
                         registrationScreenContent = {
-                            RegistrationScreen(
-                                uiState = uiState,
+                            RegistrationScreen(uiState = uiState,
                                 onRegistrationClick = { phone, name, username ->
                                     viewModel.tryToRegister(phone, name, username) {
                                         navHostController.popBackStack()
@@ -86,12 +77,10 @@ class MainActivity : ComponentActivity() {
                                 onBackClick = {
                                     navHostController.popBackStack()
                                     viewModel.loginScreenOpened(it)
-                                }
-                            )
+                                })
                         },
                         loginScreenContent = {
-                            LoginScreen(
-                                uiState = uiState,
+                            LoginScreen(uiState = uiState,
                                 getFlagEmoji = { viewModel.getFlagEmoji(it) },
                                 onEmojiClick = {
                                     navHostController.navigate(Screen.ChooseCountry.route)
@@ -99,116 +88,74 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onRegistrationClick = {
 
-                                    viewModel.registrationScreenOpened(
-                                        phone = it,
-                                        onParseSuccess = { navHostController.navigate(Screen.Registration.route) }
-                                    )
+                                    viewModel.registrationScreenOpened(phone = it,
+                                        onParseSuccess = { navHostController.navigate(Screen.Registration.route) })
                                 },
                                 onRequestSmsClick = {
                                     viewModel.tryToRequestSms(it)
                                 },
                                 onLoginClick = { phone, code ->
-                                    viewModel.tryToLogin(
-                                        phone = phone,
-                                        code = code,
-                                        onSuccess = {
-                                            navHostController.navigate(Screen.AllChats.route) {
-                                                popUpTo(Screen.Login.route) {inclusive = true}
-                                            }
+                                    viewModel.tryToLogin(phone = phone, code = code, onSuccess = {
+                                        navHostController.navigate(Screen.AllChats.route) {
+                                            popUpTo(Screen.Login.route) { inclusive = true }
                                         }
-                                    )
-                                }
-                            )
+                                    })
+                                })
                         },
                         chooseCountryScreenContent = {
-                            ChooseCountryScreen(
-                                uiState = uiState,
-                                onCountryClick = {
-                                    navHostController.popBackStack()
-                                    viewModel.loginScreenOpened(it)
-                                },
-                                onBackClick = { navHostController.popBackStack() }
-                            )
+                            ChooseCountryScreen(uiState = uiState, onCountryClick = {
+                                navHostController.popBackStack()
+                                viewModel.loginScreenOpened(it)
+                            }, onBackClick = { navHostController.popBackStack() })
                         },
                         allChatsScreenContent = {
-                            AllChatsScreen(
-                                uiState = uiState,
-                                onProfileClick = {
-                                    navHostController.navigate(Screen.Profile.route){
-                                        popUpTo(Screen.AllChats.route)
-                                    }
-                                    viewModel.profileScreenOpened()
+                            AllChatsScreen(uiState = uiState, onProfileClick = {
+                                navHostController.navigate(Screen.Profile.route) {
+                                    popUpTo(Screen.AllChats.route)
                                 }
-                            )
+                                viewModel.profileScreenOpened()
+                            }, onContactsClick = {
+                                getToastAboutFuncNotWork().show()
+                            }, onSettingsClick = {
+                                getToastAboutFuncNotWork().show()
+                            }, onLogoutClick = {
+                                navHostController.navigate(Screen.Login.route) {
+                                    popUpTo(Screen.AllChats.route) { inclusive = true }
+                                }
+                                viewModel.logout()
+                            }, onSearchClick = {
+                                getToastAboutFuncNotWork().show()
+                            })
                         },
                         chatScreenContent = {
 
                         },
                         profileScreenContent = {
-                            ProfileScreen(
-                                uiState = uiState,
-                                onEditProfileClick = {
-                                    navHostController.navigate(Screen.EditProfile.route)
-                                    viewModel.editProfileScreenOpened()
-                                },
-                                onBackClick = {
-                                    navHostController.navigate(Screen.AllChats.route){
-                                        popUpTo(Screen.AllChats.route){inclusive = true}
-                                    }
+                            ProfileScreen(uiState = uiState, onEditProfileClick = {
+                                navHostController.navigate(Screen.EditProfile.route)
+                                viewModel.editProfileScreenOpened()
+                            }, onBackClick = {
+                                navHostController.navigate(Screen.AllChats.route) {
+                                    popUpTo(Screen.AllChats.route) { inclusive = true }
                                 }
-                            )
+                                viewModel.allChatsScreenOpened()
+                            })
                         },
                         editProfileScreenContent = {
-                            EditProfileScreen(
-                                uiState = uiState,
+                            EditProfileScreen(uiState = uiState,
                                 onChangeAvatarClick = { launchAvatarImage.launch("image/*") },
                                 onSaveClick = {
-                                    viewModel.saveProfile(
-                                        profile = it,
-                                        onSuccess = {navHostController.navigate(Screen.Profile.route)}
-                                    )
+                                    viewModel.saveProfile(profile = it,
+                                        onSuccess = { navHostController.navigate(Screen.Profile.route) })
                                 },
                                 onCancelClick = {
                                     viewModel.profileScreenOpened()
                                     navHostController.navigate(Screen.Profile.route)
-                                }
-                            )
-                        }
-                    )
+                                })
+                        })
                 }
             }
         }
-    }
-
-//    private fun getBase(): Bitmap? {
-//        try {
-//            avatarUri?.let { uri ->
-//                val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, uri)
-//                val outputStream = ByteArrayOutputStream()
-//                bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
-//                val byteArray = outputStream.toByteArray()
-//                val encodedString = Base64.encodeToString(byteArray, Base64.DEFAULT)
-//                val decodedBytes = Base64.decode(encodedString, Base64.DEFAULT)
-//                return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
-//            }
-//            return null
-//        } catch (e: Exception) {
-//            return null
-//        }
-//    }
-
-
-    private fun saveAvatarToStorage(uri: Uri) {
-        val bitmap = if (Build.VERSION.SDK_INT < 28) {
-            MediaStore.Images.Media.getBitmap(contentResolver, uri)
-        } else {
-            val source = ImageDecoder.createSource(this.contentResolver, uri)
-            ImageDecoder.decodeBitmap(source)
-        }
-        val outputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
-        val byteArray = outputStream.toByteArray()
-        profileStore.avatar = Base64.encodeToString(byteArray, Base64.DEFAULT)
     }
 
     private fun mapUriToBase64(uri: Uri): String {
@@ -223,5 +170,9 @@ class MainActivity : ComponentActivity() {
         val byteArray = outputStream.toByteArray()
         return Base64.encodeToString(byteArray, Base64.DEFAULT)
     }
+
+    private fun getToastAboutFuncNotWork() = Toast.makeText(
+        this, "Не реализовано ¯\\_(ツ)_/¯", Toast.LENGTH_LONG
+    )
 
 }

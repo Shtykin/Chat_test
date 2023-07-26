@@ -1,6 +1,7 @@
 package ru.shtykin.testappchat.presentation.screen.edit_profile
 
 import android.graphics.Bitmap
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -79,7 +80,7 @@ fun EditProfileScreen(
     SideEffect {
         profile?.avatar?.let { avatar = it }
     }
-
+    BackHandler { onCancelClick?.invoke() }
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background

@@ -6,6 +6,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ViewModelComponent
 import ru.shtykin.testappchat.domain.Repository
 import ru.shtykin.testappchat.domain.usecase.CheckAuthCodeUseCase
+import ru.shtykin.testappchat.domain.usecase.GetBitmapFromUrlUseCase
 import ru.shtykin.testappchat.domain.usecase.GetProfileUseCase
 import ru.shtykin.testappchat.domain.usecase.PutProfileUseCase
 import ru.shtykin.testappchat.domain.usecase.RegistrationUseCase
@@ -33,4 +34,8 @@ class DomainModule {
     @Provides
     fun providePutProfileUseCase(repository: Repository): PutProfileUseCase =
         PutProfileUseCase(repository)
+
+    @Provides
+    fun provideGetBitmapFromUrlUseCase(repository: Repository): GetBitmapFromUrlUseCase =
+        GetBitmapFromUrlUseCase(repository)
 }
