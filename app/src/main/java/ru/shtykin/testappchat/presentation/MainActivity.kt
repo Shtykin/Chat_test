@@ -1,14 +1,12 @@
 package ru.shtykin.testappchat.presentation
 
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Base64
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -22,7 +20,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
-import ru.shtykin.testappchat.domain.entity.Profile
 import ru.shtykin.testappchat.navigation.AppNavGraph
 import ru.shtykin.testappchat.navigation.Screen
 import ru.shtykin.testappchat.presentation.screen.all_chats.AllChatsScreen
@@ -41,8 +38,10 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val viewModel: MainViewModel by viewModels()
+
     @Inject
     lateinit var authStore: AuthStore
+
     @Inject
     lateinit var profileStore: ProfileStore
 
@@ -125,7 +124,8 @@ class MainActivity : ComponentActivity() {
                                 viewModel.logout()
                             }, onSearchClick = {
                                 getToastAboutFuncNotWork().show()
-                            })
+                            }, onChatClick = {}
+                            )
                         },
                         chatScreenContent = {
 
@@ -174,5 +174,4 @@ class MainActivity : ComponentActivity() {
     private fun getToastAboutFuncNotWork() = Toast.makeText(
         this, "Не реализовано ¯\\_(ツ)_/¯", Toast.LENGTH_LONG
     )
-
 }
