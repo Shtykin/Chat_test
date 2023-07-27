@@ -129,18 +129,35 @@ class MainActivity : ComponentActivity() {
                                 navHostController.navigate(Screen.Chat.route) {
                                     popUpTo(Screen.AllChats.route) { }
                                 }
-                                viewModel.chatScreenOpened()
+                                viewModel.chatScreenOpened(it)
                             }
                             )
                         },
                         chatScreenContent = {
                             ChatScreen(
                                 uiState = uiState,
-                                onProfileClick = { /*TODO*/ },
-                                onContactsClick = { /*TODO*/ },
-                                onSettingsClick = { /*TODO*/ },
-                                onLogoutClick = { /*TODO*/ }) {
-                            }
+                                onProfileClick = {
+                                    navHostController.navigate(Screen.Profile.route) {
+                                        popUpTo(Screen.AllChats.route)
+                                    }
+                                    viewModel.profileScreenOpened()
+                                },
+                                onContactsClick = { getToastAboutFuncNotWork().show() },
+                                onSettingsClick = { getToastAboutFuncNotWork().show() },
+                                onLogoutClick = {
+                                    navHostController.navigate(Screen.Login.route) {
+                                        popUpTo(Screen.Chat.route) { inclusive = true }
+                                    }
+                                    viewModel.logout()
+                                },
+                                onBackClick = {
+                                    navHostController.navigate(Screen.AllChats.route) {
+                                        popUpTo(Screen.Chat.route) { inclusive = true }
+                                    }
+                                    viewModel.allChatsScreenOpened()
+                                },
+                                onSearchClick = { getToastAboutFuncNotWork().show() }
+                            )
                         },
                         profileScreenContent = {
                             ProfileScreen(uiState = uiState, onEditProfileClick = {

@@ -15,6 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.shtykin.testappchat.domain.entity.Country
+import ru.shtykin.testappchat.domain.entity.Guest
 import ru.shtykin.testappchat.domain.entity.Profile
 import ru.shtykin.testappchat.domain.usecase.CheckAuthCodeUseCase
 import ru.shtykin.testappchat.domain.usecase.GetBitmapFromUrlUseCase
@@ -160,9 +161,9 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun chatScreenOpened(){
+    fun chatScreenOpened(guest: Guest) {
         _uiState.value = ScreenState.ChatScreen(
-            Profile(
+            profile = Profile(
                 phone = authStore.phone,
                 name = profileStore.name,
                 username = profileStore.username,
@@ -173,7 +174,8 @@ class MainViewModel @Inject constructor(
                 status = profileStore.status,
                 avatar = getAvatarBitmap(profileStore.avatar),
                 avatarUrl = profileStore.avatarUrl
-            )
+            ),
+            guest = guest
         )
     }
 

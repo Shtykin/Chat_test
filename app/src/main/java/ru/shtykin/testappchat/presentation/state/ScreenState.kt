@@ -2,6 +2,7 @@ package ru.shtykin.testappchat.presentation.state
 
 import android.graphics.Bitmap
 import ru.shtykin.testappchat.domain.entity.Country
+import ru.shtykin.testappchat.domain.entity.Guest
 import ru.shtykin.testappchat.domain.entity.Profile
 
 
@@ -32,6 +33,7 @@ sealed class ScreenState {
 
     data class ChatScreen(
         val profile: Profile?,
+        val guest: Guest
     ) : ScreenState()
 
     data class ProfileScreen(
