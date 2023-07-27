@@ -133,21 +133,6 @@ fun LoginScreen(
     val char5FocusRequester = FocusRequester()
     val char6FocusRequester = FocusRequester()
 
-//    val animatedProgress = remember { androidx.compose.animation.core.Animatable(1f) }
-//
-//    LaunchedEffect(animatedProgress) {
-//        animatedProgress.animateTo(
-//
-//            initialVelocity = 0.5f,
-//            targetValue = 1f,
-//            animationSpec = tween(
-//                durationMillis = 2000,
-//                delayMillis = 500
-//            )
-//        )
-//    }
-
-
     var visible by remember { mutableStateOf(false) }
     SideEffect {
         visible = true

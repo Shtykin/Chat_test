@@ -31,7 +31,7 @@ sealed class ScreenState {
     ) : ScreenState()
 
     data class ChatScreen(
-        val temp: String
+        val profile: Profile?,
     ) : ScreenState()
 
     data class ProfileScreen(

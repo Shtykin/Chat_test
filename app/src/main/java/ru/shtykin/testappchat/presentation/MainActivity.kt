@@ -23,6 +23,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import ru.shtykin.testappchat.navigation.AppNavGraph
 import ru.shtykin.testappchat.navigation.Screen
 import ru.shtykin.testappchat.presentation.screen.all_chats.AllChatsScreen
+import ru.shtykin.testappchat.presentation.screen.chat.ChatScreen
 import ru.shtykin.testappchat.presentation.screen.choose_country.ChooseCountryScreen
 import ru.shtykin.testappchat.presentation.screen.edit_profile.EditProfileScreen
 import ru.shtykin.testappchat.presentation.screen.login.LoginScreen
@@ -124,11 +125,22 @@ class MainActivity : ComponentActivity() {
                                 viewModel.logout()
                             }, onSearchClick = {
                                 getToastAboutFuncNotWork().show()
-                            }, onChatClick = {}
+                            }, onChatClick = {
+                                navHostController.navigate(Screen.Chat.route) {
+                                    popUpTo(Screen.AllChats.route) { }
+                                }
+                                viewModel.chatScreenOpened()
+                            }
                             )
                         },
                         chatScreenContent = {
-
+                            ChatScreen(
+                                uiState = uiState,
+                                onProfileClick = { /*TODO*/ },
+                                onContactsClick = { /*TODO*/ },
+                                onSettingsClick = { /*TODO*/ },
+                                onLogoutClick = { /*TODO*/ }) {
+                            }
                         },
                         profileScreenContent = {
                             ProfileScreen(uiState = uiState, onEditProfileClick = {

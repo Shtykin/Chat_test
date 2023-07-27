@@ -160,6 +160,23 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun chatScreenOpened(){
+        _uiState.value = ScreenState.ChatScreen(
+            Profile(
+                phone = authStore.phone,
+                name = profileStore.name,
+                username = profileStore.username,
+                birthday = profileStore.birthday,
+                zodiacSign = getZodiacSign(profileStore.birthday),
+                age = getAge(profileStore.birthday),
+                city = profileStore.city,
+                status = profileStore.status,
+                avatar = getAvatarBitmap(profileStore.avatar),
+                avatarUrl = profileStore.avatarUrl
+            )
+        )
+    }
+
     fun allChatsScreenOpened() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
