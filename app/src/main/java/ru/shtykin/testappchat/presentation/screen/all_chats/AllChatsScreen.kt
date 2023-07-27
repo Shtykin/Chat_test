@@ -1,11 +1,13 @@
 package ru.shtykin.testappchat.presentation.screen.all_chats
 
-import androidx.activity.compose.BackHandler
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -17,6 +19,7 @@ import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,6 +35,7 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -68,72 +72,96 @@ fun AllChatsScreen(
     val drawerState = rememberDrawerState(DrawerValue.Closed)
 
     val profile = (uiState as? ScreenState.AllChatsChats)?.profile
+    val error = (uiState as? ScreenState.AllChatsChats)?.error
+    val isLoading = (uiState as? ScreenState.AllChatsChats)?.isLoading ?: false
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            ModalDrawSheet(
-                profile = profile,
-                onItemClick = {
-                    when (it) {
-                        is NavigationItem.Profile -> onProfileClick?.invoke()
-                        is NavigationItem.Contacts -> onContactsClick?.invoke()
-                        is NavigationItem.Settings -> onSettingsClick?.invoke()
-                        is NavigationItem.Logout -> onLogoutClick?.invoke()
+    Log.e("DEBUG1", "error ->${error}")
+
+
+    if (uiState is ScreenState.AllChatsChats) {
+        if (isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            }
+        } else {
+            ModalNavigationDrawer(
+                drawerState = drawerState,
+                drawerContent = {
+                    ModalDrawSheet(
+                        profile = profile,
+                        onItemClick = {
+                            when (it) {
+                                is NavigationItem.Profile -> onProfileClick?.invoke()
+                                is NavigationItem.Contacts -> onContactsClick?.invoke()
+                                is NavigationItem.Settings -> onSettingsClick?.invoke()
+                                is NavigationItem.Logout -> onLogoutClick?.invoke()
+                            }
+                        }
+                    )
+                },
+                content = {
+                    val scrollBehavior =
+                        TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+                    Scaffold(
+                        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                        topBar = {
+                            TopAppBar(
+                                title = {
+                                    Text(
+                                        text = stringResource(R.string.app_name),
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                },
+                                navigationIcon = {
+                                    IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.Menu,
+                                            contentDescription = null
+                                        )
+                                    }
+                                },
+                                actions = {
+                                    IconButton(onClick = { onSearchClick?.invoke() }) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.Search,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.background
+                                        )
+                                    }
+                                },
+                                colors = TopAppBarDefaults.smallTopAppBarColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                                ),
+                                scrollBehavior = scrollBehavior
+                            )
+                        },
+                    ) { paddingValues ->
+                        LazyColumn(contentPadding = paddingValues) {
+                            if (error != null) {
+                                item {
+                                    VerticalSpace(4.dp)
+                                    Text(text = error, color = Color.Red, fontSize = 12.sp)
+                                }
+                            } else {
+                                items(guests) {
+                                    ChatCard(
+                                        guest = it,
+                                        onClick = onChatClick
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             )
-        },
-        content = {
-            val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-            Scaffold(
-                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-                topBar = {
-                    TopAppBar(
-                        title = {
-                            Text(
-                                text = stringResource(R.string.app_name),
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        },
-                        navigationIcon = {
-                            IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Menu,
-                                    contentDescription = null
-                                )
-                            }
-                        },
-                        actions = {
-                            IconButton(onClick = { onSearchClick?.invoke() }) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Search,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.background
-                                )
-                            }
-                        },
-                        colors = TopAppBarDefaults.smallTopAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                            navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
-                        ),
-                        scrollBehavior = scrollBehavior
-                    )
-                },
-            ) { paddingValues ->
-                LazyColumn(contentPadding = paddingValues) {
-                    items(guests) {
-                        ChatCard(
-                            guest = it,
-                            onClick = onChatClick
-                        )
-                    }
-                }
-            }
         }
-    )
+    }
 }
 
 @Composable

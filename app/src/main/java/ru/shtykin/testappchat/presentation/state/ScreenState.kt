@@ -29,11 +29,15 @@ sealed class ScreenState {
 
     data class AllChatsChats(
         val profile: Profile?,
+        val isLoading: Boolean,
+        val error: String?
     ) : ScreenState()
 
     data class ChatScreen(
         val profile: Profile?,
-        val guest: Guest
+        val guest: Guest,
+        val isLoading: Boolean,
+        val error: String?
     ) : ScreenState()
 
     data class ProfileScreen(

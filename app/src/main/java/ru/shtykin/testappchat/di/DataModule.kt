@@ -37,10 +37,9 @@ class DataModule {
         @Named("UnAuthApiService") unAuthApiService: ApiService,
         @Named("AuthApiService") authApiService: ApiService,
         mapper: Mapper,
-        profileStore: ProfileStore,
         @ApplicationContext context: Context
     ): Repository {
-        return RepositoryImpl(unAuthApiService, authApiService, mapper, profileStore, context)
+        return RepositoryImpl(unAuthApiService, authApiService, mapper, context)
     }
 
     @Provides

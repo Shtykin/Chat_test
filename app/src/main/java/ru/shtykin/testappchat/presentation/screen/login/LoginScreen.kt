@@ -60,6 +60,7 @@ fun LoginScreen(
     onRegistrationClick: ((String) -> Unit)?,
     onRequestSmsClick: ((String) -> Unit)?,
     onLoginClick: ((String, String) -> Unit)?,
+    onCancelClick: ((String) -> Unit)?,
 ) {
     val country = (uiState as? ScreenState.LoginScreen)?.country
     val phoneNumber = (uiState as? ScreenState.LoginScreen)?.phone
@@ -292,11 +293,26 @@ fun LoginScreen(
                     Text(text = it, color = Color.Red, fontSize = 12.sp)
                 }
                 VerticalSpace(16.dp)
-                OutlinedButton(onClick = {
-                    code = char1 + char2 + char3 + char4 + char5 + char6
-                    onLoginClick?.invoke(phone.text, code)
-                }) {
-                    Text(text = "Продолжить")
+                Row() {
+                    OutlinedButton(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(8.dp),
+                        onClick = {
+                            onCancelClick?.invoke(phone.text)
+                    }) {
+                        Text(text = "Отмена")
+                    }
+                    OutlinedButton(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(8.dp),
+                        onClick = {
+                        code = char1 + char2 + char3 + char4 + char5 + char6
+                        onLoginClick?.invoke(phone.text, code)
+                    }) {
+                        Text(text = "Продолжить")
+                    }
                 }
             }
         }

@@ -2,43 +2,27 @@ package ru.shtykin.testappchat.data.repository
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
-import android.os.Build
-import android.telephony.TelephonyManager
-import android.util.Log
-import androidx.core.content.ContextCompat.getSystemService
 import coil.ImageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.google.gson.Gson
-import com.google.gson.annotations.SerializedName
-import com.google.gson.reflect.TypeToken
-import org.json.JSONObject
-import retrofit2.http.Field
 import ru.shtykin.testappchat.data.mapper.Mapper
-import ru.shtykin.testappchat.data.network.model.AvatarDto
-import ru.shtykin.testappchat.data.network.model.RequestRegisterDto
 import ru.shtykin.testappchat.data.network.ApiService
 import ru.shtykin.testappchat.data.network.ErrorResponse
 import ru.shtykin.testappchat.data.network.ErrorValidation
 import ru.shtykin.testappchat.data.network.model.RequestCheckAuthCodeDto
+import ru.shtykin.testappchat.data.network.model.RequestRegisterDto
 import ru.shtykin.testappchat.data.network.model.RequestSendAuthCodeDto
 import ru.shtykin.testappchat.domain.Repository
 import ru.shtykin.testappchat.domain.entity.Profile
 import ru.shtykin.testappchat.domain.entity.UserTokens
-import ru.shtykin.testappchat.settings.ProfileStore
-import java.io.IOException
-import java.net.HttpURLConnection
-import java.net.URL
-import java.util.Locale
 
 
 class RepositoryImpl(
     private val apiService: ApiService,
     private val authApiService: ApiService,
     private val mapper: Mapper,
-    private val profileStore: ProfileStore,
     private val context: Context
 ) : Repository {
 
@@ -64,16 +48,18 @@ class RepositoryImpl(
         val response = apiService.checkAuthCode(RequestCheckAuthCodeDto(phone, code)).execute()
         response.body()?.let {
             if (it.isUserExist) return mapper.mapResponseCheckAuthCodeDtoToUserTokens(it)
+            else throw IllegalStateException("User is not exist")
         }
         response.errorBody()?.string()?.let { throw IllegalStateException(parseError(it)) }
         throw IllegalStateException("Response body is empty")
     }
 
     override suspend fun getProfile(): Profile {
-        val response = authApiService.getProfile()
-        response.execute().body()?.let {
+        val response = authApiService.getProfile().execute()
+        response.body()?.let {
             return mapper.mapProfileDataDtoToProfile(it)
         }
+        response.errorBody()?.string()?.let { throw IllegalStateException(parseError(it)) }
         throw IllegalStateException("Response body is empty")
     }
 

@@ -100,7 +100,11 @@ class MainActivity : ComponentActivity() {
                                             popUpTo(Screen.Login.route) { inclusive = true }
                                         }
                                     })
-                                })
+                                },
+                                onCancelClick = {phone ->
+                                    viewModel.loginScreenOpened(phone)
+                                }
+                            )
                         },
                         chooseCountryScreenContent = {
                             ChooseCountryScreen(uiState = uiState, onCountryClick = {

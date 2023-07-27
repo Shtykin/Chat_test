@@ -55,41 +55,44 @@ fun ModalDrawSheet(
                     .height(64.dp)
                     .background(MaterialTheme.colorScheme.primary)
             ) {
-                Row(modifier = Modifier.padding(8.dp)) {
-                    if (profile?.avatar == null) {
-                        Image(
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .size(50.dp)
-                                .background(Color.White),
-                            painter = painterResource(id = R.drawable.baseline_person_24),
-                            contentDescription = null
-                        )
-                    } else
-                        AsyncImage(
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .size(50.dp),
-                            model = profile.avatar,
-                            contentScale = ContentScale.Crop,
-                            contentDescription = null
-                        )
+                profile?.let { profile ->
+                    Row(modifier = Modifier.padding(8.dp)) {
+                        if (profile?.avatar == null) {
+                            Image(
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .size(50.dp)
+                                    .background(Color.White),
+                                painter = painterResource(id = R.drawable.baseline_person_24),
+                                contentDescription = null
+                            )
+                        } else
+                            AsyncImage(
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .size(50.dp),
+                                model = profile.avatar,
+                                contentScale = ContentScale.Crop,
+                                contentDescription = null
+                            )
 
-                    HorizontalSpace(width = 8.dp)
-                    Column {
-                        Text(
-                            text = profile?.username ?: "",
-                            color = Color.White,
-                            fontSize = 18.sp
-                        )
-                        VerticalSpace(height = 4.dp)
-                        Text(
-                            text = profile?.phone ?: "",
-                            color = Color.White,
-                            fontSize = 14.sp
-                        )
+                        HorizontalSpace(width = 8.dp)
+                        Column {
+                            Text(
+                                text = profile?.username ?: "",
+                                color = Color.White,
+                                fontSize = 18.sp
+                            )
+                            VerticalSpace(height = 4.dp)
+                            Text(
+                                text = profile?.phone ?: "",
+                                color = Color.White,
+                                fontSize = 14.sp
+                            )
+                        }
                     }
                 }
+
 
             }
             firstItemGroup.forEach { item ->
