@@ -15,8 +15,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.shtykin.testappchat.domain.entity.Country
+import ru.shtykin.testappchat.domain.entity.Guest
 import ru.shtykin.testappchat.domain.entity.Profile
 import ru.shtykin.testappchat.domain.usecase.CheckAuthCodeUseCase
+import ru.shtykin.testappchat.domain.usecase.GetBitmapFromUrlUseCase
 import ru.shtykin.testappchat.domain.usecase.GetProfileUseCase
 import ru.shtykin.testappchat.domain.usecase.PutProfileUseCase
 import ru.shtykin.testappchat.domain.usecase.RegistrationUseCase
@@ -30,6 +32,7 @@ import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
 
+
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val authStore: AuthStore,
@@ -38,7 +41,8 @@ class MainViewModel @Inject constructor(
     private val sendAuthCodeUseCase: SendAuthCodeUseCase,
     private val checkAuthCodeUseCase: CheckAuthCodeUseCase,
     private val getProfileUseCase: GetProfileUseCase,
-    private val putProfileUseCase: PutProfileUseCase
+    private val putProfileUseCase: PutProfileUseCase,
+    private val getBitmapFromUrlUseCase: GetBitmapFromUrlUseCase
 ) : ViewModel() {
 
     private val _uiState =
@@ -93,10 +97,25 @@ class MainViewModel @Inject constructor(
                     this.accessToken = userTokens.accessToken
                     this.refreshToken = userTokens.refreshToken
                 }
+                val profile = getProfile()
+                saveProfileToStorage(profile)
                 withContext(Dispatchers.Main) {
                     onSuccess?.invoke()
                 }
-                _uiState.value = ScreenState.AllChatsChats("All Chats")
+                _uiState.value = ScreenState.AllChatsChats(
+                    Profile(
+                        phone = authStore.phone,
+                        name = profileStore.name,
+                        username = profileStore.username,
+                        birthday = profileStore.birthday,
+                        zodiacSign = getZodiacSign(profileStore.birthday),
+                        age = getAge(profileStore.birthday),
+                        city = profileStore.city,
+                        status = profileStore.status,
+                        avatar = getAvatarBitmap(profileStore.avatar),
+                        avatarUrl = profileStore.avatarUrl
+                    )
+                )
             } catch (e: Exception) {
                 _uiState.value = ScreenState.LoginScreen(
                     phone = phone,
@@ -122,7 +141,6 @@ class MainViewModel @Inject constructor(
                     this.accessToken = userTokens.accessToken
                     this.refreshToken = userTokens.refreshToken
                 }
-                Log.e("DEBUG", "access -> ${authStore.accessToken}")
                 withContext(Dispatchers.Main) {
                     onSuccess?.invoke("Пользователь $username зарегистрирован")
                 }
@@ -139,6 +157,49 @@ class MainViewModel @Inject constructor(
                     username = username,
                     error = e.message
                 )
+            }
+        }
+    }
+
+    fun chatScreenOpened(guest: Guest) {
+        _uiState.value = ScreenState.ChatScreen(
+            profile = Profile(
+                phone = authStore.phone,
+                name = profileStore.name,
+                username = profileStore.username,
+                birthday = profileStore.birthday,
+                zodiacSign = getZodiacSign(profileStore.birthday),
+                age = getAge(profileStore.birthday),
+                city = profileStore.city,
+                status = profileStore.status,
+                avatar = getAvatarBitmap(profileStore.avatar),
+                avatarUrl = profileStore.avatarUrl
+            ),
+            guest = guest
+        )
+    }
+
+    fun allChatsScreenOpened() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val profile = getProfile()
+                saveProfileToStorage(profile)
+                _uiState.value = ScreenState.AllChatsChats(
+                    Profile(
+                        phone = authStore.phone,
+                        name = profileStore.name,
+                        username = profileStore.username,
+                        birthday = profileStore.birthday,
+                        zodiacSign = getZodiacSign(profileStore.birthday),
+                        age = getAge(profileStore.birthday),
+                        city = profileStore.city,
+                        status = profileStore.status,
+                        avatar = getAvatarBitmap(profileStore.avatar),
+                        avatarUrl = profileStore.avatarUrl
+                    )
+                )
+            } catch (e: Exception) {
+                Log.e("DEBUG1", "Exception -> ${e.message}")
             }
         }
     }
@@ -205,8 +266,7 @@ class MainViewModel @Inject constructor(
                     username = profile.username ?: ""
                     birthday = profile.birthday ?: ""
                     city = profile.city ?: ""
-                    avatar = getAvatarBase64(profile.avatar)
-                    about = profile.status ?: ""
+                    status = profile.status ?: ""
                     avatarUrl = profile.avatarUrl ?: ""
                 }
                 _uiState.value = ScreenState.ProfileScreen(
@@ -234,7 +294,7 @@ class MainViewModel @Inject constructor(
                 zodiacSign = getZodiacSign(profileStore.birthday),
                 age = getAge(profileStore.birthday),
                 city = profileStore.city,
-                status = profileStore.about,
+                status = profileStore.status,
                 avatar = getAvatarBitmap(profileStore.avatar),
                 avatarUrl = profileStore.avatarUrl.ifEmpty { null }
             ),
@@ -247,32 +307,16 @@ class MainViewModel @Inject constructor(
         profile: Profile,
         onSuccess: (() -> Unit)? = null,
     ) {
-        if (_uiState.value is ScreenState.EditProfileScreen)
-        {
+        if (_uiState.value is ScreenState.EditProfileScreen) {
             val currentState = _uiState.value as ScreenState.EditProfileScreen
             _uiState.value = currentState.copy(isLoading = true)
-            profileStore.apply {
-                name = profile.name ?: ""
-                birthday = profile.birthday ?: ""
-                city = profile.city ?: ""
-                avatar = getAvatarBase64(profile.avatar)
-                about = profile.status ?: ""
-            }
             viewModelScope.launch(Dispatchers.IO) {
                 try {
                     val result = putProfile(profile)
                     Log.e("DEBUG1", "put result -> $result")
                     if (result) {
                         val newProfile = getProfile()
-                        profileStore.apply {
-                            name = newProfile.name ?: ""
-                            username = newProfile.username ?: ""
-                            birthday = newProfile.birthday ?: ""
-                            city = newProfile.city ?: ""
-                            avatar = getAvatarBase64(newProfile.avatar)
-                            about = newProfile.status ?: ""
-                            avatarUrl = newProfile.avatarUrl ?: ""
-                        }
+                        saveProfileToStorage(newProfile)
                         _uiState.value = ScreenState.ProfileScreen(
                             profile = newProfile,
                             isLoading = false,
@@ -289,10 +333,23 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun logout() {
+        authStore.clearCredentials()
+        _uiState.value = ScreenState.LoginScreen(
+            phone = null,
+            country = null,
+            isVisibleCodeField = false,
+            error = null,
+            errorCode = null
+        )
+    }
+
     fun updateBmp(base64: String) {
         if (_uiState.value is ScreenState.EditProfileScreen) {
             val currentState = _uiState.value as ScreenState.EditProfileScreen
-            val profile = (_uiState.value as ScreenState.EditProfileScreen).profile.copy(avatar = getAvatarBitmap(base64))
+            val profile = (_uiState.value as ScreenState.EditProfileScreen).profile.copy(
+                avatar = getAvatarBitmap(base64)
+            )
             _uiState.value = currentState.copy(profile = profile)
         }
     }
@@ -303,6 +360,18 @@ class MainViewModel @Inject constructor(
             Phonenumber.PhoneNumber.CountryCodeSource.FROM_NUMBER_WITH_PLUS_SIGN.name
         )
         return true
+    }
+
+    private suspend fun saveProfileToStorage(profile: Profile) {
+        profileStore.apply {
+            name = profile.name ?: ""
+            username = profile.username ?: ""
+            birthday = profile.birthday ?: ""
+            city = profile.city ?: ""
+            status = profile.status ?: ""
+            profile.avatarUrl?.let { avatar = getAvatarBase64(getBitmapFromUrlUseCase(it)) }
+            avatarUrl = profile.avatarUrl ?: ""
+        }
     }
 
     private fun getCountry(searchText: String): List<Country> {
@@ -428,7 +497,7 @@ class MainViewModel @Inject constructor(
         return zodiacSign
     }
 
-    private fun getAge(birthday:String?): String? {
+    private fun getAge(birthday: String?): String? {
         if (birthday.isNullOrEmpty()) return null
         val sdf = SimpleDateFormat("ddMMyyyy", Locale.getDefault())
         val birthdayTimestamp = try {
@@ -452,6 +521,8 @@ class MainViewModel @Inject constructor(
     private suspend fun getProfile() = getProfileUseCase.execute()
 
     private suspend fun putProfile(profile: Profile) = putProfileUseCase.execute(profile)
+
+    private suspend fun getBitmapFromUrlUseCase(url: String) = getBitmapFromUrlUseCase.execute(url)
 
     companion object {
         private const val DEFAULT_FLAG_EMOJI = "\uD83C\uDDF7\uD83C\uDDFA"

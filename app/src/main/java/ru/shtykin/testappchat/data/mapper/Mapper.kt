@@ -123,7 +123,7 @@ class Mapper {
         return (Date(currentDate).year - Date(birthdayTimestamp).year).toString()
     }
 
-    private fun mapBitmapToBase64(bitmap: Bitmap?): String? {
+    fun mapBitmapToBase64(bitmap: Bitmap?): String? {
         if (bitmap == null) return null
         return try {
             val outputStream = ByteArrayOutputStream()
