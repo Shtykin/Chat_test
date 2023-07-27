@@ -127,7 +127,7 @@ class MainActivity : ComponentActivity() {
                                 getToastAboutFuncNotWork().show()
                             }, onChatClick = {
                                 navHostController.navigate(Screen.Chat.route) {
-                                    popUpTo(Screen.AllChats.route) { }
+                                    popUpTo(Screen.AllChats.route) { inclusive = true }
                                 }
                                 viewModel.chatScreenOpened(it)
                             }
