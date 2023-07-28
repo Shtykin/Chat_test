@@ -1,6 +1,5 @@
 package ru.shtykin.testappchat.presentation.screen.all_chats
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -74,9 +73,6 @@ fun AllChatsScreen(
     val profile = (uiState as? ScreenState.AllChatsChats)?.profile
     val error = (uiState as? ScreenState.AllChatsChats)?.error
     val isLoading = (uiState as? ScreenState.AllChatsChats)?.isLoading ?: false
-
-    Log.e("DEBUG1", "error ->${error}")
-
 
     if (uiState is ScreenState.AllChatsChats) {
         if (isLoading) {

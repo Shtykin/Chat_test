@@ -25,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import ru.shtykin.testappchat.presentation.screen.common_parts.HorizontalSpace
 import ru.shtykin.testappchat.presentation.screen.common_parts.VerticalSpace
 import ru.shtykin.testappchat.presentation.state.ScreenState
 import ru.shtykin.testappchat.presentation.utils.PhoneNumberVisualTransformation

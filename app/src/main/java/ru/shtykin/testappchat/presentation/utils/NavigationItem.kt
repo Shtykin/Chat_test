@@ -1,7 +1,6 @@
 package ru.shtykin.testappchat.presentation.utils
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material.icons.outlined.Person

@@ -1,4 +1,4 @@
-package ru.shtykin.weatherapp.di
+package ru.shtykin.testappchat.di
 
 import android.content.Context
 import android.content.SharedPreferences

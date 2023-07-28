@@ -43,9 +43,9 @@ class ProfileStoreImpl(private val sharedPreferences: SharedPreferences) : Profi
     }
 
     companion object {
-        private const val NAME_KEY = "ProfileStore.NAME"
-        private const val USERNAME_KEY = "ProfileStore.USERNAME"
-        private const val BIRTHDAY_KEY = "ProfileStore.BIRTHDAY"
+        private const val NAME_KEY = "ProfileStore.name"
+        private const val USERNAME_KEY = "ProfileStore.username"
+        private const val BIRTHDAY_KEY = "ProfileStore.birthday"
         private const val CITY_KEY = "ProfileStore.city"
         private const val AVATAR_KEY = "ProfileStore.avatar"
         private const val AVATAR_URL_KEY = "ProfileStore.avatarUrl"
