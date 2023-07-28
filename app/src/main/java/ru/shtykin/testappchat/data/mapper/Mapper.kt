@@ -1,7 +1,6 @@
 package ru.shtykin.testappchat.data.mapper
 
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.util.Base64
 import ru.shtykin.testappchat.constants.Constants
 import ru.shtykin.testappchat.data.network.model.AvatarDto
@@ -14,7 +13,6 @@ import ru.shtykin.testappchat.domain.entity.Profile
 import ru.shtykin.testappchat.domain.entity.UserTokens
 import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
-import java.time.LocalDate
 import java.util.Date
 import java.util.Locale
 

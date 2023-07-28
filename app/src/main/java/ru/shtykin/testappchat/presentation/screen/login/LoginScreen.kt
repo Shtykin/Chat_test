@@ -1,6 +1,5 @@
 package ru.shtykin.testappchat.presentation.screen.login
 
-import androidx.compose.animation.Animatable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -15,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -23,19 +23,23 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -51,7 +55,7 @@ import ru.shtykin.testappchat.presentation.state.ScreenState
 import ru.shtykin.testappchat.presentation.utils.PhoneNumberVisualTransformation
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun LoginScreen(
     uiState: ScreenState,
@@ -156,7 +160,7 @@ fun LoginScreen(
                     animationSpec = tween(2000, 500),
                     initialAlpha = 0f
                 )
-            ){
+            ) {
                 Image(
                     modifier = Modifier
                         .clip(RoundedCornerShape(10))
@@ -228,7 +232,13 @@ fun LoginScreen(
                         modifier = Modifier
                             .weight(1f)
                             .aspectRatio(1f)
-                            .focusRequester(char2FocusRequester),
+                            .focusRequester(char2FocusRequester)
+                            .onKeyEvent {
+                                if (it.type == KeyEventType.KeyUp && it.key == Key.Backspace) {
+                                    char1FocusRequester.requestFocus()
+                                }
+                                return@onKeyEvent true
+                            },
                         value = char2,
                         valueChanged = {
                             char2 = it.take(1)
@@ -241,7 +251,13 @@ fun LoginScreen(
                         modifier = Modifier
                             .weight(1f)
                             .aspectRatio(1f)
-                            .focusRequester(char3FocusRequester),
+                            .focusRequester(char3FocusRequester)
+                            .onKeyEvent {
+                                if (it.type == KeyEventType.KeyUp && it.key == Key.Backspace) {
+                                    char2FocusRequester.requestFocus()
+                                }
+                                return@onKeyEvent true
+                            },
                         value = char3,
                         valueChanged = {
                             char3 = it.take(1)
@@ -254,7 +270,13 @@ fun LoginScreen(
                         modifier = Modifier
                             .weight(1f)
                             .aspectRatio(1f)
-                            .focusRequester(char4FocusRequester),
+                            .focusRequester(char4FocusRequester)
+                            .onKeyEvent {
+                                if (it.type == KeyEventType.KeyUp && it.key == Key.Backspace) {
+                                    char3FocusRequester.requestFocus()
+                                }
+                                return@onKeyEvent true
+                            },
                         value = char4,
                         valueChanged = {
                             char4 = it.take(1)
@@ -267,7 +289,13 @@ fun LoginScreen(
                         modifier = Modifier
                             .weight(1f)
                             .aspectRatio(1f)
-                            .focusRequester(char5FocusRequester),
+                            .focusRequester(char5FocusRequester)
+                            .onKeyEvent {
+                                if (it.type == KeyEventType.KeyUp && it.key == Key.Backspace) {
+                                    char4FocusRequester.requestFocus()
+                                }
+                                return@onKeyEvent true
+                            },
                         value = char5,
                         valueChanged = {
                             char5 = it.take(1)
@@ -280,12 +308,22 @@ fun LoginScreen(
                         modifier = Modifier
                             .weight(1f)
                             .aspectRatio(1f)
-                            .focusRequester(char6FocusRequester),
+                            .focusRequester(char6FocusRequester)
+                            .onKeyEvent {
+                                if (it.type == KeyEventType.KeyUp && it.key == Key.Backspace) {
+                                    char5FocusRequester.requestFocus()
+                                }
+                                return@onKeyEvent true
+                            },
                         value = char6,
                         valueChanged = {
                             char6 = it.take(1)
                             errorCode = null
-                        }
+                        },
+                        keyboardActions = KeyboardActions(onDone = {
+                            code = char1 + char2 + char3 + char4 + char5 + char6
+                            onLoginClick?.invoke(phone.text, code)
+                        }),
                     )
                 }
                 errorCode?.let {
@@ -300,7 +338,7 @@ fun LoginScreen(
                             .padding(8.dp),
                         onClick = {
                             onCancelClick?.invoke(phone.text)
-                    }) {
+                        }) {
                         Text(text = "Отмена")
                     }
                     OutlinedButton(
@@ -308,9 +346,9 @@ fun LoginScreen(
                             .weight(1f)
                             .padding(8.dp),
                         onClick = {
-                        code = char1 + char2 + char3 + char4 + char5 + char6
-                        onLoginClick?.invoke(phone.text, code)
-                    }) {
+                            code = char1 + char2 + char3 + char4 + char5 + char6
+                            onLoginClick?.invoke(phone.text, code)
+                        }) {
                         Text(text = "Продолжить")
                     }
                 }
@@ -325,7 +363,7 @@ fun CodeSymbolBox(
     modifier: Modifier,
     value: String,
     valueChanged: (String) -> Unit,
-
+    keyboardActions: KeyboardActions = KeyboardActions.Default
     ) {
     OutlinedTextField(
         modifier = modifier,
@@ -334,8 +372,9 @@ fun CodeSymbolBox(
         singleLine = true,
         enabled = true,
         visualTransformation = PhoneNumberVisualTransformation(),
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-    )
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        keyboardActions = keyboardActions,
+        )
 }
 
 const val PHONE_LENGTH = 12
