@@ -2,15 +2,13 @@ package ru.shtykin.testappchat.data.network
 
 import retrofit2.Call
 import retrofit2.http.*
-import ru.shtykin.testappchat.data.network.model.AvatarDto
-import ru.shtykin.testappchat.data.network.model.ProfileDataDto
 import ru.shtykin.testappchat.data.network.model.RequestCheckAuthCodeDto
 import ru.shtykin.testappchat.data.network.model.RequestProfileDto
-import ru.shtykin.testappchat.data.network.model.ResponseCheckAuthCodeDto
 import ru.shtykin.testappchat.data.network.model.RequestPutProfileDto
 import ru.shtykin.testappchat.data.network.model.RequestRefreshTokenDto
 import ru.shtykin.testappchat.data.network.model.RequestRegisterDto
 import ru.shtykin.testappchat.data.network.model.RequestSendAuthCodeDto
+import ru.shtykin.testappchat.data.network.model.ResponseCheckAuthCodeDto
 import ru.shtykin.testappchat.data.network.model.ResponseSendAuthCodeDto
 import ru.shtykin.testappchat.data.network.model.UserTokensDto
 

@@ -61,6 +61,10 @@ class MainViewModel @Inject constructor(
 
     private val phoneNumberUtil = PhoneNumberUtil.getInstance()
 
+    init {
+        if (authStore.isAuthenticated()) allChatsScreenOpened()
+    }
+
 
     fun tryToRequestSms(phone: String) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -94,8 +98,8 @@ class MainViewModel @Inject constructor(
                 val userTokens = checkAuthCode(phone, code)
                 authStore.apply {
                     this.phone = phone
-                    this.accessToken = userTokens.accessToken
-                    this.refreshToken = userTokens.refreshToken
+                    this.accessToken = userTokens.accessToken ?: ""
+                    this.refreshToken = userTokens.refreshToken ?: ""
                 }
                 val profile = getProfile()
                 saveProfileToStorage(profile)
@@ -103,18 +107,9 @@ class MainViewModel @Inject constructor(
                     onSuccess?.invoke()
                 }
                 _uiState.value = ScreenState.AllChatsChats(
-                    Profile(
-                        phone = authStore.phone,
-                        name = profileStore.name,
-                        username = profileStore.username,
-                        birthday = profileStore.birthday,
-                        zodiacSign = getZodiacSign(profileStore.birthday),
-                        age = getAge(profileStore.birthday),
-                        city = profileStore.city,
-                        status = profileStore.status,
-                        avatar = getAvatarBitmap(profileStore.avatar),
-                        avatarUrl = profileStore.avatarUrl
-                    )
+                    profile = getUserProfileFromStore(),
+                    error = null,
+                    isLoading = false
                 )
             } catch (e: Exception) {
                 _uiState.value = ScreenState.LoginScreen(
@@ -138,8 +133,8 @@ class MainViewModel @Inject constructor(
                 val userTokens = registration(phone, name, username)
                 authStore.apply {
                     this.phone = phone
-                    this.accessToken = userTokens.accessToken
-                    this.refreshToken = userTokens.refreshToken
+                    this.accessToken = userTokens.accessToken ?: ""
+                    this.refreshToken = userTokens.refreshToken ?: ""
                 }
                 withContext(Dispatchers.Main) {
                     onSuccess?.invoke("Пользователь $username зарегистрирован")
@@ -163,43 +158,34 @@ class MainViewModel @Inject constructor(
 
     fun chatScreenOpened(guest: Guest) {
         _uiState.value = ScreenState.ChatScreen(
-            profile = Profile(
-                phone = authStore.phone,
-                name = profileStore.name,
-                username = profileStore.username,
-                birthday = profileStore.birthday,
-                zodiacSign = getZodiacSign(profileStore.birthday),
-                age = getAge(profileStore.birthday),
-                city = profileStore.city,
-                status = profileStore.status,
-                avatar = getAvatarBitmap(profileStore.avatar),
-                avatarUrl = profileStore.avatarUrl
-            ),
-            guest = guest
+            profile = getUserProfileFromStore(),
+            guest = guest,
+            error = null,
+            isLoading = false
         )
     }
 
     fun allChatsScreenOpened() {
+        _uiState.value = ScreenState.AllChatsChats(
+            profile = null,
+            isLoading = true,
+            error = null
+        )
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val profile = getProfile()
                 saveProfileToStorage(profile)
                 _uiState.value = ScreenState.AllChatsChats(
-                    Profile(
-                        phone = authStore.phone,
-                        name = profileStore.name,
-                        username = profileStore.username,
-                        birthday = profileStore.birthday,
-                        zodiacSign = getZodiacSign(profileStore.birthday),
-                        age = getAge(profileStore.birthday),
-                        city = profileStore.city,
-                        status = profileStore.status,
-                        avatar = getAvatarBitmap(profileStore.avatar),
-                        avatarUrl = profileStore.avatarUrl
-                    )
+                    profile = getUserProfileFromStore(),
+                    isLoading = false,
+                    error = null
                 )
             } catch (e: Exception) {
-                Log.e("DEBUG1", "Exception -> ${e.message}")
+                _uiState.value = ScreenState.AllChatsChats(
+                    profile = getUserProfileFromStore(),
+                    isLoading = false,
+                    error = e.message
+                )
             }
         }
     }
@@ -286,18 +272,7 @@ class MainViewModel @Inject constructor(
 
     fun editProfileScreenOpened() {
         _uiState.value = ScreenState.EditProfileScreen(
-            profile = Profile(
-                phone = authStore.phone,
-                name = profileStore.name,
-                username = profileStore.username,
-                birthday = profileStore.birthday,
-                zodiacSign = getZodiacSign(profileStore.birthday),
-                age = getAge(profileStore.birthday),
-                city = profileStore.city,
-                status = profileStore.status,
-                avatar = getAvatarBitmap(profileStore.avatar),
-                avatarUrl = profileStore.avatarUrl.ifEmpty { null }
-            ),
+            profile = getUserProfileFromStore(),
             isLoading = false,
             error = null
         )
@@ -354,6 +329,19 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    private fun getUserProfileFromStore() = Profile(
+        phone = authStore.phone,
+        name = profileStore.name,
+        username = profileStore.username,
+        birthday = profileStore.birthday,
+        zodiacSign = getZodiacSign(profileStore.birthday),
+        age = getAge(profileStore.birthday),
+        city = profileStore.city,
+        status = profileStore.status,
+        avatar = getAvatarBitmap(profileStore.avatar),
+        avatarUrl = profileStore.avatarUrl.ifEmpty { null }
+    )
+
     private fun parsePhone(phone: String): Boolean {
         phoneNumberUtil.parse(
             phone,
@@ -404,7 +392,6 @@ class MainViewModel @Inject constructor(
             } catch (e: Exception) {
                 Locale.getDefault().country
             }
-            Log.e("DEBUG", "region -> $region")
             if (region.length != 2 || region == "ZZ") {
                 return DEFAULT_FLAG_EMOJI
             }
@@ -454,21 +441,6 @@ class MainViewModel @Inject constructor(
         } catch (e: Exception) {
             ""
         }
-    }
-
-    private fun getAvatarBitmapFromStorage(base64: String): Bitmap? {
-        return try {
-            val decodedBytes = Base64.decode(base64, Base64.DEFAULT)
-            BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    private fun getBirthdayString(birthday: Date): String {
-        val sdf = SimpleDateFormat("d MMMM", Locale.getDefault())
-        val date = Date(birthday.time)
-        return sdf.format(date)
     }
 
     private fun getZodiacSign(birthday: String?): String {

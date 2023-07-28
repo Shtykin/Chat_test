@@ -1,6 +1,5 @@
 package ru.shtykin.testappchat.data.network
 
-import android.util.Log
 import com.google.gson.Gson
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
