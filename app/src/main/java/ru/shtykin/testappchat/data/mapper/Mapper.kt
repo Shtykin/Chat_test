@@ -75,11 +75,6 @@ class Mapper {
         return zodiacSign
     }
 
-    private fun mapBase64ToBitmap(base64: String): Bitmap {
-        val decodedBytes = Base64.decode(base64, Base64.DEFAULT)
-        return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
-    }
-
     fun mapUserTokensDtoToUserTokens(userTokensDto: UserTokensDto) = UserTokens(
         accessToken = userTokensDto.accessToken,
         refreshToken = userTokensDto.refreshToken,

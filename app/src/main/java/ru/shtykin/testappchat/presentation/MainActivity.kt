@@ -58,7 +58,6 @@ class MainActivity : ComponentActivity() {
             val uiState by viewModel.uiState
             val startScreenRoute =
                 if (authStore.isAuthenticated()) Screen.AllChats.route else Screen.Login.route
-            if (authStore.isAuthenticated()) viewModel.allChatsScreenOpened()
             TestAppChatTheme(
             ) {
                 Surface(

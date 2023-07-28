@@ -61,6 +61,10 @@ class MainViewModel @Inject constructor(
 
     private val phoneNumberUtil = PhoneNumberUtil.getInstance()
 
+    init {
+        if (authStore.isAuthenticated()) allChatsScreenOpened()
+    }
+
 
     fun tryToRequestSms(phone: String) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -162,6 +166,11 @@ class MainViewModel @Inject constructor(
     }
 
     fun allChatsScreenOpened() {
+        _uiState.value = ScreenState.AllChatsChats(
+            profile = null,
+            isLoading = true,
+            error = null
+        )
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val profile = getProfile()
@@ -172,7 +181,11 @@ class MainViewModel @Inject constructor(
                     error = null
                 )
             } catch (e: Exception) {
-                Log.e("DEBUG1", "Exception -> ${e.message}")
+                _uiState.value = ScreenState.AllChatsChats(
+                    profile = getUserProfileFromStore(),
+                    isLoading = false,
+                    error = e.message
+                )
             }
         }
     }
